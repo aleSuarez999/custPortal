@@ -1,0 +1,61 @@
+@use "../abstracts/variables" as *;
+
+.modal__container {
+  position: fixed;
+  top: 0; left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(8, 13, 20, 0.85);
+  backdrop-filter: blur(4px);
+  height: 100vh;
+  width: 100vw;
+  z-index: 1000;
+  overflow-y: auto;
+
+  .modal__content {
+    background-color: $color-bg-elevated;
+    border: 1px solid $color-border-subtle;
+    border-top: 2px solid $color-accent;
+    color: $color-text;
+    border-radius: $radius-lg;
+    min-width: 40vw;
+    min-height: 30vh;
+    max-height: 60vh;
+    overflow-y: auto;
+    box-shadow: $shadow-elevated;
+
+    // Scrollbar interno
+    &::-webkit-scrollbar { width: 4px; }
+    &::-webkit-scrollbar-thumb {
+      background: $color-border-subtle;
+      border-radius: 2px;
+    }
+  }
+
+  .rotulo {
+    font-weight: 700;
+    font-size: 0.85rem;
+    font-family: $font-mono;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: $color-accent;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid $color-border-subtle;
+  }
+
+  .cart__summary {
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    margin: 0 1.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    color: $color-text;
+  }
+}
+
+.modal-image { width: 50px; }

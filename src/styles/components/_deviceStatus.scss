@@ -1,0 +1,47 @@
+@use "../abstracts/variables" as *;
+
+.deviceStatus {
+  font-size: 0.78rem;
+  font-family: $font-mono;
+  display: flex;
+  flex-direction: column;
+  margin-left: 0;
+  padding: 0;
+
+  li {
+    margin-left: 0;
+    list-style-type: none;
+    list-style: none;
+    padding: 0.2rem 0;
+    color: $color-text;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+
+    // Bullet indicador de estado
+    &::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: $color-text-muted;
+      flex-shrink: 0;
+    }
+  }
+
+  .red-alert {
+    color: $color-error;
+    font-weight: 600;
+    &::before { background: $color-error; box-shadow: 0 0 4px $color-error; }
+  }
+
+  .ok-status {
+    color: $color-success;
+    &::before { background: $color-success; box-shadow: 0 0 4px $color-success; }
+  }
+
+  .warn-status {
+    color: $color-warning;
+    &::before { background: $color-warning; }
+  }
+}

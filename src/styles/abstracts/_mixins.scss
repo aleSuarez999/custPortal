@@ -1,0 +1,22 @@
+@use "./variables" as *;
+@use "sass:map";
+
+@mixin create-container-width () {
+    @each $bp, $w in $grid-breakpoints {
+        @media (min-width: $w) {
+            max-width: map.get($grid-width, $bp);
+        }
+    }
+}
+
+@mixin align-items ($align, $direction) {
+    display: flex;
+    flex-direction: $direction;
+    align-items: $align;
+}
+@mixin add-box-shadow-on-hover{
+    &:hover{
+        box-shadow: $shadow-elevated;
+    }
+}
+

@@ -1,0 +1,55 @@
+@use "../abstracts/variables" as *;
+
+.footer__content {
+  height: 36px;
+  background-color: $color-bg-surface;
+  border-top: 1px solid $color-border-subtle;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  left: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+
+  &::before {
+    content: '';
+    display: block;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, $color-accent, transparent);
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    opacity: 0.4;
+  }
+
+  .footer__container {
+    color: $color-text-muted;
+    padding: 0 1.5rem;
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 0.72rem;
+    font-family: $font-mono;
+
+    p {
+      padding: 0;
+      margin: 0;
+      color: $color-text-muted;
+    }
+
+    a {
+      color: $color-text-muted;
+      text-decoration: none;
+      transition: color 0.2s;
+      &:hover { color: $color-accent; }
+    }
+
+    .footer__social {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 0 1rem;
+    }
+  }
+}

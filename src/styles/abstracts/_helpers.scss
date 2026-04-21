@@ -1,0 +1,79 @@
+@use "./variables" as *;
+@each $key, $prop in $spacings {
+    @for $i from 0 through 12 {
+        .#{$key}-#{$i} {
+            #{$prop}: $i * 0.25rem;
+        }
+    }
+}
+
+@each $key, $prop in $aligns {
+        .#{$key} {
+            align-items: #{$prop};
+        }
+}
+
+@each $key, $prop in $alignSelf {
+        .#{$key} {
+            align-self: #{$prop};
+        }
+}
+
+@each $key, $prop in $justifys {
+        .#{$key} {
+            justify-content: #{$prop};
+        }
+}
+
+@each $key, $prop in $justifySelf {
+        .#{$key} {
+            justify-self: #{$prop};
+        }
+}
+
+
+
+.w-100 {
+    width: 100%;
+}
+
+.w-10 {
+    width: 10%;
+}
+
+.d-flex {
+    display: flex;
+}
+
+.space-between {
+    justify-content: space-between;
+}
+
+.justify-end {
+    justify-content: flex-end;
+}
+
+.justify-self-end {
+    justify-self:end;
+}
+.align-end {
+    align-items:end;
+}
+
+.align-center {
+    align-items: center;
+}
+
+.asc {
+    align-self: center;
+}
+.justify-center {
+    justify-content:center;
+}
+.gap-24 {
+    gap: 24px;
+}
+
+.mb-100 {
+    margin-bottom: 100px;
+}

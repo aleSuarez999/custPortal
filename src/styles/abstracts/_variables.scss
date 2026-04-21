@@ -1,0 +1,87 @@
+
+@use "sass:color";
+
+$grid-columns: 12;
+$cardWidth: 210px;
+
+// ── Paleta Tech/Dark ────────────────────────────────────────────────────────
+$color-bg-deep:       #080d14;
+$color-bg-surface:    #0d1520;
+$color-bg-card:       #111d2e;
+$color-bg-card-hover: #152235;
+$color-bg-elevated:   #1a2940;
+
+$color-primary:       #0d1520;
+$hover-primary:       color.adjust(#0d1520, $lightness: -5%);
+
+$color-accent:        #00d4ff;
+$color-accent-dim:    rgba(0, 212, 255, 0.12);
+$color-accent-glow:   rgba(0, 212, 255, 0.25);
+
+$color-secondary:     #3b82f6;
+$color-secondary-dim: rgba(59, 130, 246, 0.15);
+
+$color-success:       #10b981;
+$color-success-dim:   rgba(16, 185, 129, 0.15);
+$navbar-hover:        #00d4ff;
+
+$color-warning:       #f59e0b;
+$color-warning-dim:   rgba(245, 158, 11, 0.15);
+
+$color-error:         #ef4444;
+$color-error-dim:     rgba(239, 68, 68, 0.15);
+
+$shopCart-color:      #ef4444;
+$color-border:        #ef4444;
+
+$color-text:          #e2e8f0;
+$color-text-muted:    #64748b;
+$color-text-header:   #94a3b8;
+$color-muted:         #475569;
+
+$active-link:         #00d4ff;
+$light-color:         #e2e8f0;
+$white:               #ffffffff;
+$black:               #080d14;
+
+$color-border-subtle: rgba(255, 255, 255, 0.07);
+$color-border-accent: rgba(0, 212, 255, 0.3);
+
+$color-card-bg:       #111d2e;
+$color-background:    #080d14;
+
+$shadow-card:         0 4px 24px rgba(0, 0, 0, 0.5);
+$shadow-elevated:     0 0 20px rgba(0, 212, 255, 0.15), 0 4px 24px rgba(0,0,0,0.5);
+$shadow-glow-accent:  0 0 12px rgba(0, 212, 255, 0.4);
+
+$radius-sm: 4px;
+$radius-md: 8px;
+$radius-lg: 12px;
+
+$btn-input-border-width: 1px;
+$btn-input-border-style: solid;
+
+$font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+$font-ui:   'Inter', 'Segoe UI', system-ui, sans-serif;
+
+$grid-breakpoints: (
+  xs: 0, sm: 576px, md: 768px, lg: 992px,
+  xl: 1200px, xxl: 1400px, xxxl: 1600px
+);
+$grid-width: (
+  xs: 360px, sm: 520px, md: 720px, lg: 880px,
+  xl: 1120px, xxl: 1280px, xxxl: 1480px
+);
+
+$spacings: (
+    m: margin, mt: margin-top, mb: margin-bottom,
+    ml: margin-left, mr: margin-right,
+    p: padding, pt: padding-top, pb: padding-bottom,
+    pl: padding-left, pr: padding-right,
+);
+$aligns: (aic: center, aie: end, aife: flex-end, ais: start, aifs: flex-start);
+$alignSelf: (aisc: center, aise: end, aisfe: flex-end, aiss: start, aisfs: flex-start);
+$justifys: (jcc: center, jcl: left, jcsa: space-around, jcsb: space-between, jcfe: flex-end, jce: end);
+$justifySelf: (jsc: center, jsl: left, jssa: space-around, jssb: space-between, jsfe: flex-end, jse: end);
+$textAligns: (tac: center, tal: left, tar: right);
+$font-w: (xs: 2rem, sm: 2rem, md: 2.5rem, lg: 2.5rem, xl: 3.5rem, xxl: 4rem);

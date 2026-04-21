@@ -1,0 +1,84 @@
+@use "../abstracts/variables" as *;
+
+// ── Layout helpers ────────────────────────────────────────────────────────────
+.d-flex        { display: flex; }
+.d-block       { display: block; }
+.gap-24        { gap: 24px; }
+.justify-center { justify-content: center; }
+.mb-100        { margin-bottom: 100px; }
+.w-100         { width: 100%; }
+
+// ── Estado de color global ───────────────────────────────────────────────────
+.color-error   { color: $color-error; }
+.color-success { color: $color-success; }
+.color-warning { color: $color-warning; }
+.color-accent  { color: $color-accent; }
+.color-muted   { color: $color-text-muted; }
+
+// ── Tipografía mono helper ───────────────────────────────────────────────────
+.font-mono { font-family: $font-mono; }
+
+// ── Superficie base del dashboard (área de contenido) ───────────────────────
+.main-content {
+  margin-left: 240px;
+  margin-top: 54px;
+  padding: 1.5rem;
+  background-color: $color-background;
+  min-height: calc(100vh - 54px);
+
+  @media screen and (max-width: 768px) {
+    margin-left: 0;
+  }
+}
+
+// ── Sección / panel genérico ─────────────────────────────────────────────────
+.panel {
+  background-color: $color-bg-card;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  padding: 1.25rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    border-color: $color-border-accent;
+    box-shadow: $shadow-elevated;
+  }
+
+  &__title {
+    font-family: $font-mono;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: $color-accent;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid $color-border-subtle;
+  }
+}
+
+// ── Stat / KPI chip ───────────────────────────────────────────────────────────
+.stat-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: $color-bg-elevated;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-md;
+
+  &__value {
+    font-family: $font-mono;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: $color-accent;
+    line-height: 1;
+  }
+  &__label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: $color-text-muted;
+    margin-top: 0.2rem;
+  }
+}

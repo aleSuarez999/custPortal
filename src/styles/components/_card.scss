@@ -1,0 +1,169 @@
+@use "sass:map";
+@use "sass:color";
+@use "../abstracts/variables" as *;
+
+// ── Card principal (dispositivos/status) ─────────────────────────────────────
+.card__body {
+  padding: 0.75rem;
+  position: relative;
+  background-color: $color-card-bg;
+  border-radius: $radius-md;
+  z-index: 1;
+  width: 210px;
+  height: 210px;           // alto fijo: todas las cards iguales
+  border: 1px solid $color-border-subtle;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+  overflow: hidden;         // nunca desborda
+  display: flex;
+  flex-direction: column;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, $color-accent, $color-secondary);
+    border-radius: $radius-md $radius-md 0 0;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+
+  &:hover {
+    border-color: $color-border-accent;
+    box-shadow: $shadow-elevated;
+    transform: translateY(-2px);
+    &::before { opacity: 1; }
+  }
+
+  .card__title {
+    font-size: 0.72rem;
+    font-weight: 600;
+    font-family: $font-mono;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    line-height: 1.35;
+    // máximo 2 líneas, ellipsis en la tercera
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: 2.2rem;
+    margin-bottom: 0.4rem;
+  }
+}
+
+// ── Card VLANs ───────────────────────────────────────────────────────────────
+.card__vlans__body {
+  padding: 0.75rem;
+  position: relative;
+  background-color: $color-card-bg;
+  border-radius: $radius-md;
+  z-index: 1;
+  width: 320px;
+  min-height: 150px;
+  height: auto;
+  border: 1px solid $color-border-subtle;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  overflow: hidden;
+
+  &:hover {
+    border-color: $color-border-accent;
+    box-shadow: $shadow-elevated;
+  }
+
+  .card__title {
+    font-size: 0.72rem;
+    font-weight: 600;
+    font-family: $font-mono;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 0.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.card__status {}
+
+.card__chart {
+  margin-top: auto;         // empuja el gráfico al fondo de la card
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+
+  @media screen and (max-width: 768px) {
+    max-width: 100%;
+  }
+}
+
+// ── Accordion content ────────────────────────────────────────────────────────
+.accordion-content {
+  margin-top: 10px;
+  padding: 10px;
+  top: 50px;
+  background-color: $color-bg-elevated;
+  border: 1px solid $color-border-accent;
+  animation: fadeIn 0.3s ease-in-out;
+  left: 10px;
+  position: absolute;
+  z-index: 2;
+  border-radius: $radius-lg;
+  width: 95%;
+  margin-bottom: 5rem;
+  height: auto;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+// ── Card SSIDs ───────────────────────────────────────────────────────────────
+.card__ssids__container {
+  border: 1px solid $color-border-subtle;
+  padding: 0.5rem;
+  border-radius: $radius-md;
+  flex-direction: row;
+  display: flex;
+  background: $color-bg-elevated;
+
+  .ssid__name { height: 2rem; color: $color-text; }
+  .ssid__vlan {
+    width: 30%;
+    text-align: center;
+    font-family: $font-mono;
+    font-size: 0.8rem;
+    color: $color-accent;
+    background-color: rgb(0, 212, 255, 0.4)
+  }
+}
+
+.card__ssids__body {
+  ul {
+    margin-left: 0;
+    padding: 0;
+    li {
+      list-style-type: none;
+      margin-left: 0;
+      color: $color-text;
+      font-size: 0.82rem;
+      padding: 0.2rem 0;
+      border-bottom: 1px solid $color-border-subtle;
+      &:last-child { border-bottom: none; }
+    }
+  }
+}
+
+.ssid__selector {
+  display: flex;
+  align-self: center;
+  margin-right: 1rem;
+}

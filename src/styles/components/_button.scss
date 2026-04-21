@@ -1,0 +1,79 @@
+@use "sass:map";
+@use "sass:color";
+@use "../abstracts/variables" as *;
+
+.btn {
+  padding: 0.55rem 1.2rem;
+  border: none;
+  border-radius: $radius-sm;
+  font-weight: 600;
+  font-family: $font-ui;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn__primary {
+  &.btn__solid {
+    background: linear-gradient(135deg, $color-secondary, color.adjust($color-secondary, $lightness: -8%));
+    color: white;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+
+    &:hover {
+      box-shadow: 0 4px 16px rgba(59, 130, 246, 0.5);
+      transform: translateY(-1px);
+    }
+  }
+
+  &.btn__outline {
+    background-color: transparent;
+    border: 1px solid $color-secondary;
+    color: $color-secondary;
+
+    &:hover {
+      background-color: $color-secondary-dim;
+      box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
+    }
+  }
+}
+
+.btn__secondary {
+  &.btn__solid {
+    background: $color-accent-dim;
+    border: 1px solid $color-border-accent;
+    color: $color-accent;
+    box-shadow: 0 2px 8px rgba(0, 212, 255, 0.1);
+
+    &:hover {
+      background: rgba(0, 212, 255, 0.18);
+      box-shadow: $shadow-glow-accent;
+      transform: translateY(-1px);
+    }
+  }
+
+  &.btn__outline {
+    background-color: transparent;
+    border: 1px solid $color-border-accent;
+    color: $color-accent;
+
+    &:hover {
+      background-color: $color-accent-dim;
+      box-shadow: $shadow-glow-accent;
+    }
+  }
+}
+
+// Botón de peligro/error
+.btn__danger {
+  background: $color-error-dim;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: $color-error;
+  &:hover {
+    background: rgba(239, 68, 68, 0.2);
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+  }
+}

@@ -1,0 +1,453 @@
+@use "../abstracts/variables" as *;
+@use "sass:color";
+
+// ── Dashboard wrapper ─────────────────────────────────────────────────────────
+.inc__dashboard {
+  padding: 1.5rem 1.25rem;
+  color: $color-text;
+  font-family: $font-ui;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+// ── Header ────────────────────────────────────────────────────────────────────
+.inc__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid $color-border-subtle;
+}
+
+.inc__title {
+  font-family: $font-mono;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: $color-accent;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.25rem 0;
+}
+
+.inc__subtitle {
+  font-size: 0.78rem;
+  color: $color-text-muted;
+  max-width: 520px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+// ── Period selector ───────────────────────────────────────────────────────────
+.inc__period-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.inc__period-label {
+  font-size: 0.75rem;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-right: 0.2rem;
+}
+
+.inc__period-btn {
+  background: $color-bg-elevated;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-sm;
+  color: $color-text-muted;
+  font-family: $font-mono;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.7rem;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+
+  &:hover {
+    background: $color-accent-dim;
+    color: $color-accent;
+    border-color: $color-border-accent;
+  }
+
+  &--active {
+    background: $color-accent-dim;
+    color: $color-accent;
+    border-color: $color-border-accent;
+    box-shadow: $shadow-glow-accent;
+  }
+}
+
+// ── Loading / Error ───────────────────────────────────────────────────────────
+.inc__loading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: $color-text-muted;
+  font-size: 0.85rem;
+  padding: 2rem 0;
+}
+
+.inc__spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid $color-border-subtle;
+  border-top-color: $color-accent;
+  border-radius: 50%;
+  animation: inc-spin 0.7s linear infinite;
+}
+
+@keyframes inc-spin {
+  to { transform: rotate(360deg); }
+}
+
+.inc__error {
+  color: $color-error;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: $radius-md;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+}
+
+.inc__empty {
+  color: $color-text-muted;
+  font-size: 0.82rem;
+  text-align: center;
+  padding: 1.5rem 0;
+}
+
+// ── KPI row ───────────────────────────────────────────────────────────────────
+.inc__kpi-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+.inc__kpi-card {
+  background: $color-bg-card;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-md;
+  padding: 0.9rem 1.25rem;
+  min-width: 140px;
+  flex: 1 1 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    border-color: $color-border-accent;
+    box-shadow: $shadow-elevated;
+  }
+
+  &--accent {
+    border-color: $color-border-accent;
+    background: $color-bg-elevated;
+
+    .inc__kpi-value { color: $color-accent; }
+  }
+}
+
+.inc__kpi-label {
+  font-size: 0.68rem;
+  font-family: $font-mono;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: $color-text-muted;
+}
+
+.inc__kpi-value {
+  font-size: 1.9rem;
+  font-family: $font-mono;
+  font-weight: 700;
+  color: $color-text;
+  line-height: 1.1;
+}
+
+.inc__kpi-unit {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: $color-text-muted;
+}
+
+.inc__kpi-sub {
+  font-size: 0.65rem;
+  color: $color-text-muted;
+}
+
+// ── Availability badge ────────────────────────────────────────────────────────
+.inc__avail-badge {
+  background: $color-bg-card;
+  border: 2px solid;
+  border-radius: $radius-md;
+  padding: 0.9rem 1.25rem;
+  min-width: 160px;
+  flex: 1 1 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  transition: box-shadow 0.2s ease;
+
+  &:hover { box-shadow: $shadow-elevated; }
+}
+
+.inc__avail-value {
+  font-family: $font-mono;
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.inc__avail-label {
+  font-size: 0.68rem;
+  font-family: $font-mono;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: $color-text-muted;
+}
+
+.inc__avail-sub {
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+// ── Charts rows ───────────────────────────────────────────────────────────────
+.inc__charts-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.inc__chart-panel {
+  background: $color-bg-card;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-md;
+  padding: 1rem 1.1rem;
+  flex: 1 1 260px;
+  min-width: 0;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    border-color: $color-border-accent;
+    box-shadow: $shadow-elevated;
+  }
+
+  &--wide {
+    flex: 2 1 420px;
+  }
+}
+
+// ── Panel genérico (tabla) ────────────────────────────────────────────────────
+.inc__panel {
+  background: $color-bg-card;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-md;
+  padding: 1rem 1.1rem;
+  margin-bottom: 1rem;
+  transition: border-color 0.2s ease;
+
+  &:hover { border-color: $color-border-accent; }
+}
+
+.inc__panel-title {
+  font-family: $font-mono;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: $color-text-header;
+  margin: 0 0 0.75rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+// ── Table ─────────────────────────────────────────────────────────────────────
+.inc__table-wrap {
+  overflow-x: auto;
+}
+
+.inc__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+
+  th {
+    text-align: left;
+    font-family: $font-mono;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: $color-text-muted;
+    padding: 0.4rem 0.75rem;
+    border-bottom: 1px solid $color-border-subtle;
+  }
+
+  td {
+    padding: 0.45rem 0.75rem;
+    color: $color-text;
+    border-bottom: 1px solid $color-border-subtle;
+    vertical-align: middle;
+
+    &:last-child { border-right: none; }
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tr:hover td {
+    background: $color-bg-elevated;
+  }
+}
+
+.inc__td-mono {
+  font-family: $font-mono;
+  font-size: 0.72rem;
+  color: $color-text-muted;
+}
+
+// ── Badges ────────────────────────────────────────────────────────────────────
+.inc__badge {
+  display: inline-block;
+  font-family: $font-mono;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.15rem 0.5rem;
+  border-radius: $radius-sm;
+
+  &--type {
+    background: $color-accent-dim;
+    color: $color-accent;
+    border: 1px solid $color-border-accent;
+  }
+
+  &--count {
+    background: $color-secondary-dim;
+    color: $color-secondary;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    font-size: 0.7rem;
+    padding: 0.1rem 0.55rem;
+  }
+}
+
+// ── Tooltip recharts ──────────────────────────────────────────────────────────
+.inc__tooltip {
+  background: $color-bg-elevated;
+  border: 1px solid $color-border-accent;
+  border-radius: $radius-sm;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.78rem;
+  font-family: $font-ui;
+  color: $color-text;
+
+  p { margin: 0.1rem 0; }
+}
+
+.inc__tooltip-label {
+  font-family: $font-mono;
+  font-size: 0.7rem;
+  color: $color-text-muted;
+  margin-bottom: 0.25rem !important;
+}
+
+// ── Footer note ───────────────────────────────────────────────────────────────
+.inc__footer-note {
+  font-size: 0.68rem;
+  color: $color-text-muted;
+  font-family: $font-mono;
+  text-align: right;
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid $color-border-subtle;
+}
+
+// ── Dropdown Reports en navbar ────────────────────────────────────────────────
+.navbar__dropdown {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 54px;
+
+  &:hover .navbar__dropdown-menu,
+  &:focus-within .navbar__dropdown-menu {
+    opacity: 1;
+    pointer-events: all;
+    transform: translateY(0);
+  }
+}
+
+.navbar__dropdown-trigger {
+  padding: 0.4rem 0.9rem;
+  font-weight: 500;
+  font-size: 0.82rem;
+  font-family: $font-ui;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: $color-text-muted;
+  text-decoration: none;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  height: 100%;
+  transition: color 0.2s ease, background 0.2s ease;
+
+  &:hover, &.active {
+    color: $color-accent;
+    background: $color-accent-dim;
+  }
+
+  .navbar__dropdown-arrow {
+    font-size: 0.55rem;
+    transition: transform 0.2s ease;
+  }
+}
+
+.navbar__dropdown:hover .navbar__dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.navbar__dropdown-menu {
+  position: absolute;
+  top: calc(100% - 2px);
+  left: 0;
+  min-width: 180px;
+  background: $color-bg-elevated;
+  border: 1px solid $color-border-accent;
+  border-radius: $radius-md;
+  box-shadow: $shadow-elevated;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  overflow: hidden;
+
+  a {
+    display: block;
+    padding: 0.55rem 1rem;
+    font-size: 0.80rem;
+    font-family: $font-ui;
+    color: $color-text-muted;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &:hover, &.active {
+      background: $color-accent-dim;
+      color: $color-accent;
+    }
+  }
+}

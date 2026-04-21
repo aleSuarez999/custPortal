@@ -1,0 +1,46 @@
+@use "../abstracts/variables" as *;
+
+// Import Google Fonts para estética tech
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: $color-background;
+  color: $color-text;
+  font-family: $font-ui;
+  margin: 0;
+  padding: 0;
+}
+
+.header__content {
+  background-color: $color-bg-surface;
+  border-bottom: 1px solid $color-border-subtle;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 100;
+  // Línea accent en la parte inferior
+  &::after {
+    content: '';
+    display: block;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, $color-accent, transparent);
+    opacity: 0.6;
+  }
+}
+
+.header__container {
+  // layout manejado desde navbar
+}
+
+header h2 {
+  z-index: 1;
+  margin-bottom: 2rem;
+  color: $color-accent;
+  font-family: $font-mono;
+  letter-spacing: 0.05em;
+}

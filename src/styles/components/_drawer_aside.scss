@@ -1,0 +1,74 @@
+@use "sass:map";
+@use "../abstracts/variables" as *;
+
+.drawer__aside__container {
+  z-index: 998;
+
+  .drawer__aside__content {
+    background-color: $color-bg-surface;
+    border-right: 1px solid $color-border-accent;
+    color: $color-text;
+    width: 260px;
+    min-height: 50vh;
+    padding: 1.5rem;
+    transition: transform 0.3s ease;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+
+    @media screen and (max-width: map.get($grid-breakpoints, md)) {
+      width: 100vw;
+    }
+
+    .drawer__aside__close {
+      position: absolute;
+      top: 50px;
+      left: 268px;
+      background-color: $color-bg-elevated;
+      border: 1px solid $color-border-subtle;
+      padding: 0.4rem 0.6rem;
+      border-radius: $radius-sm;
+      color: $color-text-muted;
+      cursor: pointer;
+      z-index: 5000;
+      font-size: 0.8rem;
+      transition: border-color 0.2s, color 0.2s;
+
+      &:hover {
+        border-color: $color-accent;
+        color: $color-accent;
+      }
+    }
+  }
+}
+
+.navbar__drawer__aside-menu {
+  margin-top: 2rem;
+  padding: 0;
+
+  ul { list-style: none; padding: 0; margin: 0; }
+  li { margin-bottom: 0.25rem; }
+
+  a {
+    display: block;
+    padding: 0.6rem 0.9rem;
+    color: $color-text-muted;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: $radius-sm;
+    border-left: 2px solid transparent;
+    transition: background 0.2s, color 0.2s, border-left-color 0.2s;
+
+    &:hover {
+      background: $color-accent-dim;
+      color: $color-text;
+      border-left-color: $color-accent;
+    }
+
+    &.active {
+      color: $color-accent;
+      background: $color-accent-dim;
+      border-left-color: $color-accent;
+      font-weight: 600;
+    }
+  }
+}

@@ -1,0 +1,202 @@
+@use "sass:color";
+@use "../abstracts/variables" as *;
+
+// ── Contenedor principal uplink ──────────────────────────────────────────────
+.uplink-container {
+  border: 1px solid $color-border-subtle;
+  margin: 8px;
+  padding: 1rem;
+  border-radius: $radius-md;
+  background-color: $color-bg-card;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    border-color: $color-border-accent;
+    box-shadow: $shadow-elevated;
+  }
+
+  h4 {
+    margin-bottom: 0.5rem;
+    font-size: 0.82rem;
+    font-family: $font-mono;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: $color-accent;
+  }
+
+  ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+
+    li {
+      margin-bottom: 6px;
+      padding: 0.4rem 0.6rem;
+      background-color: $color-bg-elevated;
+      border-left: 3px solid $color-border-subtle;
+      border-radius: 0 $radius-sm $radius-sm 0;
+      font-size: 0.78rem;
+      font-family: $font-mono;
+      color: $color-text;
+      transition: border-left-color 0.2s;
+
+      &.down {
+        border-left-color: $color-error;
+        background-color: $color-error-dim;
+        color: $color-error;
+      }
+
+      &.active {
+        border-left-color: $color-success;
+        background-color: $color-success-dim;
+        color: $color-success;
+      }
+    }
+  }
+}
+
+// ── Warning: último uplink (badge parpadeante) ───────────────────────────────
+.uplink-last-warning {
+  color: $color-warning;
+  font-weight: 700;
+  font-family: $font-mono;
+  animation: pulse-warning 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse-warning {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+
+// ── Banner resumen de alerta ─────────────────────────────────────────────────
+.uplink-last-banner {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+  background: $color-warning-dim;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-left: 3px solid $color-warning;
+  border-radius: $radius-md;
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 1rem;
+
+  &__icon {
+    font-size: 1.4rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  &__text {
+    p {
+      margin: 0.2rem 0 0.4rem;
+      font-size: 0.82rem;
+      color: $color-text-muted;
+    }
+  }
+
+  &__list {
+    margin: 0;
+    padding-left: 1rem;
+    font-size: 0.78rem;
+    font-family: $font-mono;
+    color: $color-text;
+
+    li { margin-bottom: 0.2rem; }
+  }
+}
+
+// ── Tarjeta de sitio ─────────────────────────────────────────────────────────
+.uplink-site {
+  border: 1px solid $color-border-subtle;
+  margin: 0 0 6px;
+  padding: 0.5rem 0.75rem;
+  border-radius: $radius-sm;
+  background: $color-bg-elevated;
+  transition: border-color 0.2s;
+
+  &--last-uplink {
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    background: rgba(245, 158, 11, 0.05);
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  &__name {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: $font-mono;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: $color-text;
+  }
+
+  &__links { font-size: 0.78rem; }
+
+  &__serial,
+  &__count {
+    margin: 2px 0;
+    font-size: 0.75rem;
+    font-family: $font-mono;
+    color: $color-text-muted;
+  }
+
+  &__warning-msg {
+    font-size: 0.78rem;
+    font-family: $font-mono;
+    color: $color-warning;
+    font-weight: 600;
+    margin: 4px 0 6px;
+    padding: 4px 8px;
+    background: $color-warning-dim;
+    border-left: 2px solid $color-warning;
+    border-radius: 0 $radius-sm $radius-sm 0;
+  }
+}
+
+// ── Badge inline ─────────────────────────────────────────────────────────────
+.uplink-site__badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  font-family: $font-mono;
+  padding: 0.1rem 0.4rem;
+  border-radius: 9999px;
+  vertical-align: middle;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  &--warning {
+    background: rgba(245, 158, 11, 0.2);
+    color: $color-warning;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    animation: pulse-warning 1.8s ease-in-out infinite;
+  }
+}
+
+// ── Link al portal Meraki ────────────────────────────────────────────────────
+.uplink-meraki-link {
+  color: $color-accent;
+  text-decoration: none;
+  border-bottom: 1px dashed rgba(0, 212, 255, 0.4);
+  transition: color 0.15s, border-color 0.15s, text-shadow 0.15s;
+
+  &:hover {
+    color: color.adjust(#00d4ff, $lightness: 10%);
+    border-bottom-style: solid;
+    text-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
+  }
+
+  .uplink-last-banner & {
+    color: $color-warning;
+    &:hover { color: color.adjust(#f59e0b, $lightness: 10%); }
+  }
+}

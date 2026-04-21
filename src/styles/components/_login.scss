@@ -1,0 +1,114 @@
+@use "sass:map";
+@use "sass:color";
+@use "../abstracts/variables" as *;
+
+.login__container {
+  max-width: 420px;
+  margin: 2rem auto 2rem;
+  padding: 2.5rem;
+  background-color: $color-bg-card;
+  border: 1px solid $color-border-subtle;
+  border-top: 2px solid $color-accent;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-elevated;
+  position: relative;
+  overflow: hidden;
+
+  // Efecto grid de fondo decorativo
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events: none;
+  }
+
+  // Título login
+  h2, h3 {
+    font-family: $font-mono;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: $color-accent;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    text-shadow: 0 0 14px rgba(0, 212, 255, 0.4);
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    position: relative;
+
+    input {
+      margin-bottom: 0;
+      padding: 0.65rem 0.9rem;
+      border: 1px solid $color-border-subtle;
+      border-radius: $radius-sm;
+      background-color: $color-bg-elevated;
+      color: $color-text;
+      font-family: $font-ui;
+      font-size: 0.875rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+
+      &::placeholder { color: $color-text-muted; }
+
+      &:focus {
+        outline: none;
+        border-color: $color-accent;
+        box-shadow: 0 0 0 2px $color-accent-dim;
+      }
+    }
+
+    button {
+      margin-top: 0.5rem;
+      padding: 0.7rem;
+      background: $color-accent;
+      color: $color-bg-deep;
+      border: none;
+      border-radius: $radius-sm;
+      font-weight: 700;
+      font-size: 0.875rem;
+      font-family: $font-ui;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 0 0 16px rgba(0, 212, 255, 0.35);
+      transition: box-shadow 0.2s ease, transform 0.15s ease;
+
+      &:hover {
+        box-shadow: 0 0 24px rgba(0, 212, 255, 0.55);
+        transform: translateY(-1px);
+      }
+    }
+
+    .error {
+      color: $color-error;
+      font-size: 0.8rem;
+      font-family: $font-mono;
+      margin-top: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: $color-error-dim;
+      border-left: 3px solid $color-error;
+      border-radius: $radius-sm;
+    }
+  }
+}
+
+.login-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* vertical */
+  align-items: center;     /* horizontal */
+  height: 100vh;           /* ocupa toda la pantalla */
+}
+
+.logo {
+  margin-bottom: 5px;
+  width: 120px; /* opcional */
+}

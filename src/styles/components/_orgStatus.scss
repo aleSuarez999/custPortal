@@ -1,0 +1,63 @@
+@use "../abstracts/variables" as *;
+
+.orgStatus {
+  font-size: 0.78rem;
+  font-family: $font-mono;
+  display: flex;
+  flex-direction: column;
+  margin-left: 0;
+  padding: 0;
+
+  li {
+    margin-left: 0;
+    list-style-type: none;
+    list-style: none;
+    padding: 0.25rem 0;
+    color: $color-text;
+    border-bottom: 1px solid $color-border-subtle;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    &:last-child { border-bottom: none; }
+  }
+
+  .red-alert {
+    color: $color-error;
+    font-weight: 600;
+    text-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
+  }
+
+  .ok-status { color: $color-success; }
+  .warn-status { color: $color-warning; }
+}
+
+// Badge de estado tipo chip
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  font-family: $font-mono;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  &--ok {
+    background: $color-success-dim;
+    color: $color-success;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+  &--error {
+    background: $color-error-dim;
+    color: $color-error;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+  &--warn {
+    background: $color-warning-dim;
+    color: $color-warning;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+}

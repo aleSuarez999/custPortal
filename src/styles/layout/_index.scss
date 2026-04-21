@@ -1,0 +1,102 @@
+@use "sass:map";
+@use "sass:color";
+@use "../abstracts/variables" as *;
+@use "../abstracts/mixins" as *;
+
+// ── Reset base ────────────────────────────────────────────────────────────────
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  min-width: 320px;
+  min-height: 100vh;
+  width: 100%;
+  background-color: $color-background;
+  color: $color-text;
+  font-family: $font-ui;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  // Desactivar media query light mode — siempre dark
+}
+
+#root {
+  padding: 1rem;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  color: $color-text;
+  top: 2rem;
+  width: 100vw;
+  z-index: 1;
+
+  @media screen and (min-width: map.get($grid-width, xs)) {
+    justify-content: center;
+  }
+}
+
+.container {
+  @include create-container-width();
+}
+
+// ── Links globales ────────────────────────────────────────────────────────────
+a {
+  font-weight: 500;
+  color: $color-accent;
+  text-decoration: none;
+  transition: color 0.2s;
+
+  &:hover { color: color.adjust(#00d4ff, $lightness: 10%); }
+}
+
+// ── Headings ──────────────────────────────────────────────────────────────────
+h1 {
+  font-size: 1.8rem;
+  line-height: 1.2;
+  margin: 0.5rem 0;
+  font-family: $font-mono;
+  font-weight: 700;
+  color: $color-accent;
+  letter-spacing: 0.04em;
+}
+
+h2, h3, h4, h5, h6 {
+  font-family: $font-ui;
+  color: $color-text;
+  margin: 0.5rem 0;
+}
+
+// ── Scrollbar global ──────────────────────────────────────────────────────────
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: $color-bg-surface; }
+::-webkit-scrollbar-thumb {
+  background: $color-border-subtle;
+  border-radius: 3px;
+  &:hover { background: rgba(0, 212, 255, 0.3); }
+}
+
+// ── Accordion global ──────────────────────────────────────────────────────────
+.accordion-content {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: $color-bg-elevated;
+  border-left: 2px solid $color-accent;
+  border-radius: 0 $radius-sm $radius-sm 0;
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+// ── Selección de texto ────────────────────────────────────────────────────────
+::selection {
+  background: $color-accent-dim;
+  color: $color-accent;
+}
