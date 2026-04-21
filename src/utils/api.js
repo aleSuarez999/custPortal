@@ -591,3 +591,15 @@ export const getPortalInventory = async (orgId, filters = {}) => {
     return resp.data.ok ? resp.data : null
   } catch (e) { return null }
 }
+
+
+export const getIncidentNetworkDetail = async (orgId, networkId) => {
+  try {
+    const params = new URLSearchParams({ orgId, networkId })
+    const resp = await axiosInstance.get(`/incidents/network-detail?${params}`)
+    return resp.data?.ok ? resp.data : null
+  } catch (error) {
+    console.error('getIncidentNetworkDetail:', error.message)
+    return null
+  }
+}

@@ -7,9 +7,10 @@ import {
   getIncidentReport,
   getIncidentOrgs,
   updateIncidentWorkStatus,
-  getResolvedIncidentsReport
+  getResolvedIncidentsReport, getIncidentNetworkDetail
 } from '../utils/api'
 import Text from '../components/Text'
+import IncidentWanDetail from '../components/incidents/IncidentWanDetail'
 
 // ── Paleta del proyecto ───────────────────────────────────────────────────────
 const COLOR_ACCENT    = '#00d4ff'
@@ -94,13 +95,35 @@ function ChartTooltip({ active, payload, label }) {
 
 // ── Fila editable de incidente abierto ────────────────────────────────────────
 function OpenIncidentRow({ inc, onSave }) {
-  const [ws, setWs]          = useState(inc.workStatus || 'active')
-  const [claim, setClaim]    = useState(inc.claimNumber || '')
-  const [saving, setSaving]  = useState(false)
-  const [dirty, setDirty]    = useState(false)
+  const [expanded, setExpanded] = useState(false)
+  const [detail, setDetail] = useState(null)
+  const [loadingDetail, setLoadingDetail] = useState(false)
+
+  const [ws, setWs] = useState(inc.workStatus || 'active')
+  const [claim, setClaim] = useState(inc.claimNumber || '')
+  const [saving, setSaving] = useState(false)
+  const [dirty, setDirty] = useState(false)
 
   const handleWsChange = v => { setWs(v); setDirty(true) }
   const handleClaimChange = v => { setClaim(v); setDirty(true) }
+
+  const toggleExpand = async () => {
+    const next = !expanded
+    setExpanded(next)
+
+    // Lazy load: solo al abrir y si no está cargado
+    if (next && !detail) {
+      try {
+        setLoadingDetail(true)
+        const d = await getIncidentNetworkDetail(inc.orgId, inc.networkId)
+        setDetail(d)
+      } catch (err) {
+        console.error('WAN detail error:', err.message)
+      } finally {
+        setLoadingDetail(false)
+      }
+    }
+  }
 
   const handleSave = async () => {
     setSaving(true)
@@ -110,34 +133,36 @@ function OpenIncidentRow({ inc, onSave }) {
   }
 
   const cfg = WORK_STATUS_CFG[ws] || WORK_STATUS_CFG.active
-  const rowStyle = ws === 'in_progress'
-    ? { background: 'rgba(245,158,11,0.07)', borderLeft: `3px solid ${COLOR_WARNING}` }
-    : {}
-
+  const rowStyle =
+    ws === 'in_progress'
+      ? { background: 'rgba(245,158,11,0.07)', borderLeft: `3px solid ${COLOR_WARNING}` }
+      : {}
 
   return (
-    <tr style={rowStyle}>
-      {/* Tipo */}
-      <td><span className="inc__badge inc__badge--type">{inc.incidentType}</span></td>
+    <>
+      {/* Fila principal */}
+      <tr
+        onClick={toggleExpand}
+        style={{ cursor: 'pointer', ...rowStyle }} >
 
-      {/* Severidad */}
-      <td>
-        <span className="inc__badge" style={{
+        <td  className="inc__td-mono" style={{ color: COLOR_MUTED, fontSize: '0.75rem', textAlign: 'center' }}>
+          {expanded ? '▾' : '▸'}
+        </td>
+
+        <td><span className="inc__badge inc__badge--type">{inc.incidentType}</span></td>
+
+        <td>  <span className="inc__badge" style={{
           background: (SEVERITY_COLORS[inc.severity] || COLOR_MUTED) + '22',
           color: SEVERITY_COLORS[inc.severity] || COLOR_MUTED,
           border: `1px solid ${SEVERITY_COLORS[inc.severity] || COLOR_MUTED}44`
         }}>
           {inc.severity}
         </span>
-      </td>
+</td>
 
-      {/* Red (nombre) */}
-      <td className="inc__td-mono">{inc.networkName || inc.networkId || '—'}</td>
+        <td  className="inc__td-mono" >{inc.networkName || inc.networkId || '—'}</td>
 
-      {/* Device */}
-      <td className="inc__td-mono">{inc.deviceSerial || '—'}</td>
-
-      {/* WAN / uplinkInterface */}
+        <td  className="inc__td-mono" >{inc.deviceSerial || '—'}</td>
       <td>
         {inc.uplinkInterface
           ? <span className="inc__badge" style={{
@@ -152,47 +177,69 @@ function OpenIncidentRow({ inc, onSave }) {
           : <span style={{ color: '#64748b' }}>—</span>
         }
       </td>
+        <td  className="inc__td-mono">{fmtDate(inc.detectedAt)}</td>
 
-      {/* Detectado */}
-      <td className="inc__td-mono">{fmtDate(inc.detectedAt)}</td>
+        {/* Selector estado */}
+        <td  className="inc__td-mono" onClick={e => e.stopPropagation()}>
+          <select className="inc__ws-select"
+            value={ws}
+            onChange={e => handleWsChange(e.target.value)}
+            style={{ color: cfg.color, borderColor: cfg.color + '88', background: cfg.bg }}
+          >
+            <option value="active">Active</option>
+            <option value="in_progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+          </select>
+        </td>
 
-      {/* Work Status selector */}
-      <td>
-        <select
-          className="inc__ws-select"
-          value={ws}
-          onChange={e => handleWsChange(e.target.value)}
-          style={{ color: cfg.color, borderColor: cfg.color + '88', background: cfg.bg }}
-        >
-          <option value="active">Active</option>
-          <option value="in_progress">In Progress</option>
-          <option value="resolved">Resolved</option>
-        </select>
-      </td>
-
-      {/* Claim Number */}
-      <td>
-        <input
+        {/* Claim */}
+        <td  className="inc__td-mono" onClick={e => e.stopPropagation()}>
+             <input
           className="inc__claim-input"
           type="text"
           placeholder="Nro reclamo"
           value={claim}
           onChange={e => handleClaimChange(e.target.value)}
         />
-      </td>
+        </td>
 
-      {/* Guardar */}
-      <td>
-        <button
-          className={`inc__save-btn${dirty ? ' inc__save-btn--dirty' : ''}`}
-          onClick={handleSave}
-          disabled={!dirty || saving}
-          title="Guardar cambios"
-        >
-          {saving ? '…' : '✔'}
-        </button>
-      </td>
-    </tr>
+        {/* Guardar */}
+        <td  className="inc__td-mono" onClick={e => e.stopPropagation()}>
+          <button style={{ padding: '0.25rem 0.6rem' }}
+          className="btn btn__secondary btn__outline"
+          
+            onClick={handleSave}
+            disabled={!dirty}
+            title="Guardar"
+          >
+            {saving ? '…' : '✔'}
+          </button>
+        </td>
+      </tr>
+
+      {/* Fila expandida */}
+      {expanded && (
+        <tr>
+          <td />
+          <td colSpan={9} style={{ padding: '0.75rem 0.5rem 0.75rem 0' }}>
+            <div
+              style={{
+                background: 'rgba(0,0,0,0.15)',
+                borderRadius: 6,
+                padding: '0.75rem 1rem',
+                animation: 'inc-expand 0.18s ease',
+              }}
+            >
+              {loadingDetail ? (
+                <div className="inc__loading">Cargando WAN…</div>
+              ) : (
+                <IncidentWanDetail detail={detail} inc={inc} />
+              )}
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
   )
 }
 
@@ -206,6 +253,7 @@ function OpenIncidentsTable({ rows, onSave }) {
       <table className="inc__table">
         <thead>
           <tr>
+            <th>S</th>
             <th>Type</th>
             <th>Severity</th>
             <th>Network</th>
@@ -254,6 +302,7 @@ function ResolvedReportTable({ data }) {
             <table className="inc__table">
               <thead>
                 <tr>
+
                   <th>Type</th>
                   <th>Network</th>
                   <th>Device</th>

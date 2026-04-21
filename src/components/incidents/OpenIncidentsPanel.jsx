@@ -41,7 +41,7 @@ export default function OpenIncidentsPanel() {
   return (
     <section className="card mb-5">
       <header className="card__header">
-        <h2>Open Incidents</h2>
+        <h2>Open Incidents1222222</h2>
       </header>
 
       <div className="card__body">
