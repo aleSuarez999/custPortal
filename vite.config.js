@@ -30,7 +30,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd())
   const isProduction = env.VITE_PRODUCTION === 'true'
-  const subFolder = import.meta.env.VITE_BASE;
+  const subFolder = env.VITE_BASE;
   return {
     plugins: [react()],
     base: isProduction ? `/help2/${subFolder}/` : '/',
