@@ -1,8 +1,9 @@
 import axios from "axios";
 
 const isProduction = import.meta.env.VITE_PRODUCTION === 'true';
-const baseURL = isProduction ? 'http://consultasnoc.int.fibercorp.com.ar/help2/merakiApp/api' : 'http://localhost:4000/api';
-const locationHREF = isProduction ? '/help2/merakiApp/login' : '/login';
+const subFolder = import.meta.env.VITE_BASE;
+const baseURL = isProduction ? `http://consultasnoc.int.fibercorp.com.ar/help2/${subFolder}/api` : 'http://localhost:4000/api';
+const locationHREF = isProduction ? `/help2/${subFolder}/login` : '/login';
 
 const axiosInstance = axios.create({
   //baseURL: "http://localhost:4000/api"

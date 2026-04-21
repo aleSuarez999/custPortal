@@ -18,9 +18,9 @@ import IncidentPortal from '../pages/IncidentPortal';
 //import VpnEventLog      from '../pages/VpnEventLog';
 //import CustomerPortal   from '../pages/CustomerPortal';
 //import CUEstadisticas from '../pages/CUEstadisticas';
-
+const subFolder = import.meta.env.VITE_BASE;
 const isProduction = import.meta.env.VITE_PRODUCTION === 'true';
-const basename = isProduction ? '/help2/merakiApp' : '/';
+const basename = isProduction ? `/help2/${subFolder}` : '/';
 
 function AppRoutes() {
   return (
