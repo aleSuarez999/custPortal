@@ -637,3 +637,13 @@ export const getIncidentNetworkDetail = async (orgId, networkId) => {
     return null
   }
 }
+
+export const deleteIncident = async (id) => {
+  try {
+    const resp = await axiosInstance.delete(`/incidents/${id}`)
+    return resp.data?.ok ?? false
+  } catch (error) {
+    console.error('deleteIncident:', error.message)
+    return false
+  }
+}

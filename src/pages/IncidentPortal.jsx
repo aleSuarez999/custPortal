@@ -9,7 +9,8 @@ import {
   updateIncidentWorkStatus,
   bulkAssignClaim,
   toggleIncidentSLA,
-  getResolvedIncidentsReport, getIncidentNetworkDetail
+  getResolvedIncidentsReport, getIncidentNetworkDetail,
+  deleteIncident,
 } from '../utils/api'
 import Text from '../components/Text'
 import IncidentWanDetail from '../components/incidents/IncidentWanDetail'
@@ -396,7 +397,7 @@ function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncid
 }
 
 // ── Tabla reporte resueltos ───────────────────────────────────────────────────
-function ResolvedReportTable({ data }) {
+function ResolvedReportTable({ data, onDelete, onToggleSLA }) {
   if (!data) return null
   const { summary, incidents } = data
 
@@ -407,12 +408,12 @@ function ResolvedReportTable({ data }) {
         <span className="inc__badge inc__badge--count">{summary.total}</span>
       </Text>
 
-      {/* Métricas agregadas */}
+      {/* Métricas — solo cuentan incidentes con countsSLA:true */}
       <div className="inc__kpi-row" style={{ marginBottom: '1rem' }}>
-        <KpiCard label="Total Resolved"      value={summary.total} accent />
-        <KpiCard label="Total Downtime"      value={summary.totalDowntimeHuman} />
-        <KpiCard label="Avg Downtime"        value={summary.avgDowntimeHuman}   sub="per incident" />
-        <KpiCard label="Max Downtime"        value={summary.maxDowntimeHuman}   sub="single incident" />
+        <KpiCard label="Total Resolved"   value={summary.total} accent />
+        <KpiCard label="SLA Downtime"     value={summary.totalDowntimeHuman} sub="solo incidentes SLA" />
+        <KpiCard label="Avg SLA Downtime" value={summary.avgDowntimeHuman}   sub="por evento SLA" />
+        <KpiCard label="Max SLA Downtime" value={summary.maxDowntimeHuman}   sub="evento único" />
       </div>
 
       {incidents.length === 0
@@ -422,19 +423,20 @@ function ResolvedReportTable({ data }) {
             <table className="inc__table">
               <thead>
                 <tr>
-
                   <th>Type</th>
                   <th>Network</th>
                   <th>Device</th>
                   <th>Detected</th>
                   <th>Resolved (manual)</th>
                   <th>Downtime</th>
+                  <th title="¿Este incidente acumula tiempo de SLA?">SLA</th>
                   <th>Claim #</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
                 {incidents.map((r, i) => (
-                  <tr key={i} style={r.isDuplicateInGroup ? { opacity: 0.6 } : {}}>
+                  <tr key={r._id || i} style={r.isDuplicateInGroup ? { opacity: 0.6 } : {}}>
                     <td><span className="inc__badge inc__badge--type">{r.incidentType}</span></td>
                     <td className="inc__td-mono">{r.networkName || r.networkId || '—'}</td>
                     <td className="inc__td-mono">{r.deviceSerial || '—'}</td>
@@ -458,7 +460,40 @@ function ResolvedReportTable({ data }) {
                           </span>
                       }
                     </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <button
+                        title={r.countsSLA ? 'Cuenta SLA — click para desactivar' : 'No cuenta SLA — click para activar'}
+                        onClick={() => onToggleSLA?.(r._id, !r.countsSLA)}
+                        style={{
+                          fontSize: '0.7rem', fontWeight: 700,
+                          padding: '0.15rem 0.45rem', borderRadius: 4,
+                          cursor: 'pointer', border: '1px solid',
+                          transition: 'all 0.15s',
+                          background:   r.countsSLA ? 'rgba(239,68,68,0.15)' : 'rgba(100,116,139,0.1)',
+                          color:        r.countsSLA ? '#ef4444' : '#475569',
+                          borderColor:  r.countsSLA ? '#ef444444' : '#47556933',
+                        }}
+                      >
+                        {r.countsSLA ? 'SLA' : '—'}
+                      </button>
+                    </td>
                     <td className="inc__td-mono">{r.claimNumber || '—'}</td>
+                    <td style={{ textAlign: 'center', padding: '0 0.4rem' }}>
+                      <button
+                        title="Eliminar registro"
+                        onClick={() => onDelete?.(r._id, r)}
+                        style={{
+                          background: 'none', border: 'none', cursor: 'pointer',
+                          color: '#475569', padding: '0.2rem',
+                          lineHeight: 1, fontSize: '0.9rem',
+                          transition: 'color 0.15s',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                        onMouseLeave={e => e.currentTarget.style.color = '#475569'}
+                      >
+                        🗑
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -736,6 +771,32 @@ useEffect(() => {
     return modified
   }, [])
 
+  const handleToggleSLAResolved = useCallback(async (id, countsSLA) => {
+    const ok = await toggleIncidentSLA(id, countsSLA)
+    if (!ok) return
+    setResolvedData(prev => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        incidents: prev.incidents.map(i =>
+          String(i._id) === String(id) ? { ...i, countsSLA } : i
+        ),
+      }
+    })
+  }, [])
+
+  const handleDeleteIncident = useCallback(async (id, inc) => {
+    const label = inc?.deviceSerial || id
+    if (!window.confirm(`¿Eliminar el registro "${label}" de la base de datos? Esta acción no se puede deshacer.`)) return
+    const ok = await deleteIncident(id)
+    if (!ok) return
+    setResolvedData(prev => {
+      if (!prev) return prev
+      const filtered = prev.incidents.filter(i => String(i._id) !== String(id))
+      return { ...prev, incidents: filtered, summary: { ...prev.summary, total: filtered.length } }
+    })
+  }, [])
+
   const orgName = orgs.find(o => o.id === selectedOrg)?.name || ''
 
   return (
@@ -924,7 +985,7 @@ useEffect(() => {
           {activeTab === 'resolved' && (
             loadingResolved
               ? <div className="inc__loading"><span className="inc__spinner" /> Loading resolved report…</div>
-              : <ResolvedReportTable data={resolvedData} />
+              : <ResolvedReportTable data={resolvedData} onDelete={handleDeleteIncident} onToggleSLA={handleToggleSLAResolved} />
           )}
 
           {/* Footer */}

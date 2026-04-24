@@ -346,7 +346,7 @@ export default function IncidentWanDetail({ detail, inc, onManualIncidentCreated
 
             {/* Detalle WAN (solo MX) */}
             {dev.wanLinks && (
-              <WanLinksTable wanLinks={dev.wanLinks} incidentInterface={inc?.uplinkInterface} />
+              <WanLinksTable wanLinks={dev.wanLinks} incidentInterface={inc?.uplinkInterface} networkDevices={networkDevices} />
             )}
 
             {/* Detalle LTE (solo MG) */}
