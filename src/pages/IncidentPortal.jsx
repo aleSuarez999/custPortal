@@ -34,6 +34,7 @@ const WORK_STATUS_CFG = {
   active:      { label: 'Active',      color: COLOR_ERROR,     bg: 'rgba(239,68,68,0.10)'  },
   in_progress: { label: 'In Progress', color: COLOR_WARNING,   bg: 'rgba(245,158,11,0.12)' },
   resolved:    { label: 'Resolved',    color: COLOR_SUCCESS,   bg: 'rgba(16,185,129,0.10)' },
+  suspended:   { label: 'Suspended',   color: COLOR_MUTED,     bg: 'rgba(100,116,139,0.10)' },
 }
 
 const TYPE_COLORS  = [COLOR_ACCENT, COLOR_SECONDARY, COLOR_SUCCESS, COLOR_WARNING, COLOR_ERROR, '#8b5cf6', '#ec4899']
@@ -137,7 +138,9 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
 
   const cfg = WORK_STATUS_CFG[ws] || WORK_STATUS_CFG.active
   const rowStyle =
-    ws === 'in_progress'
+    ws === 'suspended'
+      ? { opacity: 0.45, filter: 'grayscale(0.6)', borderLeft: '3px solid #475569' }
+      : ws === 'in_progress'
       ? { background: 'rgba(245,158,11,0.07)', borderLeft: `3px solid ${COLOR_WARNING}` }
       : {}
 
@@ -205,6 +208,7 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
             <option value="active">Active</option>
             <option value="in_progress">In Progress</option>
             <option value="resolved">Resolved</option>
+            <option value="suspended">Suspended</option>
           </select>
         </td>
 
@@ -335,6 +339,7 @@ function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncid
             <option value="active">Active</option>
             <option value="in_progress">In Progress</option>
             <option value="resolved">Resolved</option>
+            <option value="suspended">Suspended</option>
           </select>
           <button
             className="btn btn__secondary btn__outline"
@@ -979,6 +984,8 @@ useEffect(() => {
               </p>
               <OpenIncidentsTable
                 rows={[...data.recentOpen].sort((a, b) => {
+                  if (a.workStatus === 'suspended' && b.workStatus !== 'suspended') return 1
+                  if (b.workStatus === 'suspended' && a.workStatus !== 'suspended') return -1
                   const order = { DEVICE_OFFLINE: 0, UPLINK_DOWN: 1 }
                   return (order[a.incidentType] ?? 2) - (order[b.incidentType] ?? 2)
                 })}
