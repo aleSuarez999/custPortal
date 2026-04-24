@@ -638,6 +638,16 @@ export const getIncidentNetworkDetail = async (orgId, networkId) => {
   }
 }
 
+export const getMgSims = async (serial) => {
+  try {
+    const resp = await axiosInstance.get(`/incidents/mg-sims?serial=${serial}`)
+    return resp.data?.ok ? resp.data : null
+  } catch (error) {
+    console.error('getMgSims:', error.message)
+    return null
+  }
+}
+
 export const deleteIncident = async (id) => {
   try {
     const resp = await axiosInstance.delete(`/incidents/${id}`)

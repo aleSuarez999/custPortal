@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import IpWhoisTooltip from '../IpWhoisTooltip'
-import { createManualIncident } from '../../utils/api'
+import { createManualIncident, getMgSims } from '../../utils/api'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const STATUS_CFG = {
@@ -181,6 +181,101 @@ function LteDetail({ lteUplinks, imei }) {
   )
 }
 
+// ── Panel de SIMs en tiempo real ──────────────────────────────────────────────
+function SimDetail({ serial }) {
+  const [data, setData]       = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState(null)
+
+  const fetch = async () => {
+    setLoading(true); setError(null)
+    const res = await getMgSims(serial)
+    setLoading(false)
+    if (!res) { setError('No se pudo obtener datos de la SIM'); return }
+    setData(res)
+  }
+
+  if (!data && !loading && !error) {
+    return (
+      <button onClick={fetch} style={{
+        marginTop: '0.4rem', fontSize: '0.7rem', padding: '0.2rem 0.6rem',
+        background: 'rgba(0,212,255,0.07)', border: '1px solid rgba(0,212,255,0.25)',
+        borderRadius: 4, color: '#00d4ff', cursor: 'pointer',
+      }}>
+        ↺ Consultar SIM en tiempo real
+      </button>
+    )
+  }
+
+  if (loading) return <p style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.4rem' }}>Consultando SIM…</p>
+  if (error)   return (
+    <div style={{ marginTop: '0.4rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+      <span style={{ fontSize: '0.7rem', color: '#ef4444' }}>{error}</span>
+      <button onClick={fetch} style={{ fontSize: '0.68rem', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>reintentar</button>
+    </div>
+  )
+
+  const { sims = [], simOrdering = [], simFailover } = data
+  return (
+    <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <span style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 600, letterSpacing: '0.05em' }}>SIM — TIEMPO REAL</span>
+        <button onClick={fetch} title="Actualizar" style={{ fontSize: '0.7rem', background: 'none', border: 'none', color: '#475569', cursor: 'pointer' }}>↺</button>
+        {simFailover && (
+          <span style={{ fontSize: '0.65rem', color: '#64748b', marginLeft: 'auto' }}>
+            Failover {simFailover.enabled ? `activo (${simFailover.timeout}s)` : 'inactivo'}
+          </span>
+        )}
+      </div>
+
+      {sims.map((sim, i) => {
+        const isPrimary = sim.isPrimary
+        const isInserted = sim.status === 'inserted'
+        return (
+          <div key={i} style={{
+            borderRadius: 4, padding: '0.35rem 0.6rem',
+            background: isInserted ? 'rgba(16,185,129,0.05)' : 'rgba(100,116,139,0.07)',
+            border: `1px solid ${isInserted ? '#10b98120' : '#47556930'}`,
+          }}>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.2rem', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: isInserted ? '#10b981' : '#64748b' }}>
+                {sim.slot?.toUpperCase()}
+              </span>
+              <span style={{ fontSize: '0.65rem', color: isInserted ? '#10b981' : '#64748b' }}>{sim.status || '—'}</span>
+              {isPrimary && (
+                <span style={{ fontSize: '0.62rem', color: '#00d4ff', border: '1px solid rgba(0,212,255,0.3)', borderRadius: 3, padding: '0 0.3rem' }}>PRIMARY</span>
+              )}
+              {simOrdering.length > 0 && (
+                <span style={{ fontSize: '0.62rem', color: '#475569', marginLeft: 'auto' }}>
+                  orden: {simOrdering.indexOf(sim.slot) + 1}°
+                </span>
+              )}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.15rem 1.2rem' }}>
+              {sim.iccid  && <LteField label="ICCID"  value={sim.iccid} />}
+              {sim.imsi   && <LteField label="IMSI"   value={sim.imsi} />}
+              {sim.msisdn && <LteField label="MSISDN" value={sim.msisdn} />}
+            </div>
+            {sim.apns?.length > 0 && (
+              <div style={{ marginTop: '0.3rem', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                {sim.apns.map((apn, j) => (
+                  <div key={j} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.15rem 1.2rem',
+                    background: 'rgba(255,255,255,0.03)', borderRadius: 3, padding: '0.2rem 0.4rem' }}>
+                    <LteField label="APN"  value={apn.name} />
+                    {apn.authentication?.type && <LteField label="Auth" value={apn.authentication.type} />}
+                    {apn.authentication?.username && <LteField label="User" value={apn.authentication.username} />}
+                    {apn.allowedIpTypes?.length > 0 && <LteField label="IP" value={apn.allowedIpTypes.join(' / ')} />}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ── Mini-form para crear incidente manual en MG/MS/MR ────────────────────────
 // Solo el panel del formulario; el trigger "+" vive en el header del DeviceCard.
 function CreateIncidentPanel({ dev, orgId, networkId, onCreated, onClose }) {
@@ -351,6 +446,11 @@ function DeviceCard({ dev, inc, networkDevices, orgId, networkId, onManualIncide
       {/* ── Detalle LTE (solo MG) ── */}
       {dev.lteUplinks && (
         <LteDetail lteUplinks={dev.lteUplinks} imei={dev.imei} />
+      )}
+
+      {/* ── Consulta SIM en tiempo real (solo MG) ── */}
+      {dev.type === 'MG' && (
+        <SimDetail serial={dev.serial} />
       )}
 
       {/* ── Avisos ── */}
