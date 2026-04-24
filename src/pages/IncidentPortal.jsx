@@ -426,8 +426,8 @@ function ResolvedReportTable({ data, onDelete, onToggleSLA }) {
                   <th>Type</th>
                   <th>Network</th>
                   <th>Device</th>
-                  <th>Detected</th>
-                  <th>Resolved (manual)</th>
+                  <th>LinkDown</th>
+                  <th>LinkUp</th>
                   <th>Downtime</th>
                   <th title="¿Este incidente acumula tiempo de SLA?">SLA</th>
                   <th>Claim #</th>
@@ -441,7 +441,16 @@ function ResolvedReportTable({ data, onDelete, onToggleSLA }) {
                     <td className="inc__td-mono">{r.networkName || r.networkId || '—'}</td>
                     <td className="inc__td-mono">{r.deviceSerial || '—'}</td>
                     <td className="inc__td-mono">{fmtDate(r.detectedAt)}</td>
-                    <td className="inc__td-mono">{r.manualResolvedAt ? fmtDate(r.manualResolvedAt) : '—'}</td>
+                    <td className="inc__td-mono">
+                      {r.effectiveResolvedAt ? (
+                        <span>
+                          {fmtDate(r.effectiveResolvedAt)}
+                          <span style={{ marginLeft: 4, fontSize: '0.62rem', color: '#475569' }}>
+                            {r.resolvedAt ? '⟳ auto' : '✎ manual'}
+                          </span>
+                        </span>
+                      ) : '—'}
+                    </td>
                     <td>
                       {r.isDuplicateInGroup
                         ? <span style={{ fontSize: '0.68rem', color: '#64748b', fontStyle: 'italic' }}

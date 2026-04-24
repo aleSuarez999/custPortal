@@ -139,21 +139,28 @@ function LteDetail({ lteUplinks, imei }) {
   return (
     <div style={{ marginTop: '0.45rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
       {lteUplinks.map((u, i) => {
-        const lteDown = u.status && u.status !== 'active' && u.status !== 'ready'
+        const lteDown   = u.status && u.status !== 'active' && u.status !== 'ready'
+        const fromCache = !!u.fromCache
         return (
           <div key={i} style={{
-            background: lteDown ? 'rgba(239,68,68,0.07)' : 'rgba(16,185,129,0.05)',
-            border: `1px solid ${lteDown ? '#ef444430' : '#10b98125'}`,
+            background: fromCache ? 'rgba(100,116,139,0.07)' : lteDown ? 'rgba(239,68,68,0.07)' : 'rgba(16,185,129,0.05)',
+            border: `1px solid ${fromCache ? '#47556930' : lteDown ? '#ef444430' : '#10b98125'}`,
             borderRadius: 5, padding: '0.35rem 0.6rem',
           }}>
             {/* fila estado */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.25rem' }}>
               <span style={{ fontSize: '0.72rem', fontWeight: 700, color: lteDown ? '#ef4444' : '#10b981' }}>
-                {u.interface} · {u.status || '—'}
+                {u.interface}{u.status ? ` · ${u.status}` : ''}
               </span>
               {u.provider   && <span style={{ fontSize: '0.68rem', color: '#64748b' }}>{u.provider}</span>}
               {u.signalType && <span style={{ fontSize: '0.68rem', color: '#64748b' }}>{u.signalType}</span>}
               {u.ip         && <span style={{ fontSize: '0.68rem', fontFamily: 'monospace', color: '#94a3b8' }}>{u.ip}</span>}
+              {fromCache && (
+                <span title={u.lastSeenAt ? `Último dato: ${new Date(u.lastSeenAt).toLocaleString('es-AR')}` : 'Dato en caché'}
+                  style={{ fontSize: '0.62rem', color: '#64748b', fontStyle: 'italic', marginLeft: 'auto' }}>
+                  ⏱ caché{u.lastSeenAt ? ` · ${new Date(u.lastSeenAt).toLocaleDateString('es-AR')}` : ''}
+                </span>
+              )}
             </div>
             {/* grilla de campos SIM/red */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.15rem 1.2rem' }}>
