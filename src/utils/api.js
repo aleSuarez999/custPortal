@@ -432,6 +432,40 @@ export const updateIncidentWorkStatus = async (id, { workStatus, claimNumber, re
     }
 }
 
+// POST /api/incidents/manual → crear incidente manual para MG/MS/MR
+export const createManualIncident = async (payload) => {
+    try {
+        const resp = await axiosInstance.post('/incidents/manual', payload)
+        return resp.data.ok ? resp.data.incident : null
+    } catch (error) {
+        if (error.response?.status === 409) return { conflict: true, incident: error.response.data.incident }
+        console.error('createManualIncident error:', error.message)
+        return null
+    }
+}
+
+// PATCH /api/incidents/:id/sla → toggle countsSLA
+export const toggleIncidentSLA = async (id, countsSLA) => {
+    try {
+        const resp = await axiosInstance.patch(`/incidents/${id}/sla`, { countsSLA })
+        return resp.data.ok ? resp.data.incident : null
+    } catch (error) {
+        console.error('toggleIncidentSLA error:', error.message)
+        return null
+    }
+}
+
+// PATCH /api/incidents/bulk-claim → asignar mismo claim a varios incidentes
+export const bulkAssignClaim = async (ids, claimNumber, workStatus) => {
+    try {
+        const resp = await axiosInstance.patch('/incidents/bulk-claim', { ids, claimNumber, workStatus })
+        return resp.data.ok ? resp.data.modified : null
+    } catch (error) {
+        console.error('bulkAssignClaim error:', error.message)
+        return null
+    }
+}
+
 // GET /api/incidents/resolved-report?orgId=X&days=N
 export const getResolvedIncidentsReport = async (orgId = null, days = 30) => {
     try {

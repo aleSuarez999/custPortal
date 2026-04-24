@@ -7,6 +7,8 @@ import {
   getIncidentReport,
   getIncidentOrgs,
   updateIncidentWorkStatus,
+  bulkAssignClaim,
+  toggleIncidentSLA,
   getResolvedIncidentsReport, getIncidentNetworkDetail
 } from '../utils/api'
 import Text from '../components/Text'
@@ -94,7 +96,7 @@ function ChartTooltip({ active, payload, label }) {
 }
 
 // ── Fila editable de incidente abierto ────────────────────────────────────────
-function OpenIncidentRow({ inc, onSave }) {
+function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, onToggleSelect }) {
   const [expanded, setExpanded] = useState(false)
   const [detail, setDetail] = useState(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
@@ -145,20 +147,33 @@ function OpenIncidentRow({ inc, onSave }) {
         onClick={toggleExpand}
         style={{ cursor: 'pointer', ...rowStyle }} >
 
+        <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center', paddingRight: '0.25rem' }}>
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={() => onToggleSelect(inc._id)}
+            style={{ cursor: 'pointer', accentColor: COLOR_ACCENT }}
+          />
+        </td>
+
         <td  className="inc__td-mono" style={{ color: COLOR_MUTED, fontSize: '0.75rem', textAlign: 'center' }}>
           {expanded ? '▾' : '▸'}
         </td>
 
-        <td><span className="inc__badge inc__badge--type">{inc.incidentType}</span></td>
-
-        <td>  <span className="inc__badge" style={{
-          background: (SEVERITY_COLORS[inc.severity] || COLOR_MUTED) + '22',
-          color: SEVERITY_COLORS[inc.severity] || COLOR_MUTED,
-          border: `1px solid ${SEVERITY_COLORS[inc.severity] || COLOR_MUTED}44`
-        }}>
-          {inc.severity}
-        </span>
-</td>
+        <td>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+            <span className="inc__badge" style={{
+              background: (SEVERITY_COLORS[inc.severity] || COLOR_MUTED) + '22',
+              color: SEVERITY_COLORS[inc.severity] || COLOR_MUTED,
+              border: `1px solid ${SEVERITY_COLORS[inc.severity] || COLOR_MUTED}44`
+            }}>
+              {inc.severity}
+            </span>
+            <span style={{ fontSize: '0.65rem', color: '#64748b', fontFamily: 'monospace' }}>
+              {inc.incidentType === 'DEVICE_OFFLINE' ? 'offline' : inc.uplinkInterface || inc.incidentType}
+            </span>
+          </div>
+        </td>
 
         <td  className="inc__td-mono" >{inc.networkName || inc.networkId || '—'}</td>
 
@@ -203,11 +218,27 @@ function OpenIncidentRow({ inc, onSave }) {
         />
         </td>
 
+        {/* Toggle SLA */}
+        <td className="inc__td-mono" onClick={e => e.stopPropagation()}>
+          <button
+            title={inc.countsSLA ? 'Cuenta para SLA — click para desactivar' : 'No cuenta para SLA — click para activar'}
+            onClick={() => onToggleSLA(inc._id, !inc.countsSLA)}
+            style={{
+              fontSize: '0.7rem', padding: '0.15rem 0.4rem', borderRadius: 4,
+              border: `1px solid ${inc.countsSLA ? '#10b98166' : '#64748b44'}`,
+              background: inc.countsSLA ? 'rgba(16,185,129,0.12)' : 'rgba(100,116,139,0.08)',
+              color: inc.countsSLA ? '#10b981' : '#64748b',
+              cursor: 'pointer', fontWeight: 600,
+            }}
+          >
+            SLA
+          </button>
+        </td>
+
         {/* Guardar */}
         <td  className="inc__td-mono" onClick={e => e.stopPropagation()}>
           <button style={{ padding: '0.25rem 0.6rem' }}
           className="btn btn__secondary btn__outline"
-          
             onClick={handleSave}
             disabled={!dirty}
             title="Guardar"
@@ -233,7 +264,11 @@ function OpenIncidentRow({ inc, onSave }) {
               {loadingDetail ? (
                 <div className="inc__loading">Cargando WAN…</div>
               ) : (
-                <IncidentWanDetail detail={detail} inc={inc} />
+                <IncidentWanDetail
+                  detail={detail}
+                  inc={inc}
+                  onManualIncidentCreated={onNewIncident}
+                />
               )}
             </div>
           </td>
@@ -244,34 +279,119 @@ function OpenIncidentRow({ inc, onSave }) {
 }
 
 // ── Tabla incidentes abiertos ─────────────────────────────────────────────────
-function OpenIncidentsTable({ rows, onSave }) {
+function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncident }) {
+  const [selected, setSelected] = useState([])
+  const [bulkClaim, setBulkClaim] = useState('')
+  const [bulkStatus, setBulkStatus] = useState('in_progress')
+  const [saving, setSaving] = useState(false)
+
+  const toggleSelect = (id) =>
+    setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+
+  const toggleAll = () =>
+    setSelected(prev => prev.length === rows.length ? [] : rows.map(r => r._id))
+
+  const handleBulkSave = async () => {
+    if (!bulkClaim.trim() || selected.length === 0) return
+    setSaving(true)
+    const modified = await onBulkClaim(selected, bulkClaim.trim(), bulkStatus)
+    if (modified !== null) {
+      setSelected([])
+      setBulkClaim('')
+    }
+    setSaving(false)
+  }
+
   if (!rows || rows.length === 0)
     return <p className="inc__empty">No open incidents for this organization</p>
 
   return (
-    <div className="inc__table-wrap">
-      <table className="inc__table">
-        <thead>
-          <tr>
-            <th>S</th>
-            <th>Type</th>
-            <th>Severity</th>
-            <th>Network</th>
-            <th>Device</th>
-            <th>WAN</th>
-            <th>Detected</th>
-            <th>Status</th>
-            <th>Claim #</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(r => (
-            <OpenIncidentRow key={r._id} inc={r} onSave={onSave} />
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <>
+      {/* ── Panel bulk-claim (solo visible cuando hay selección) ── */}
+      {selected.length > 0 && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap',
+          background: 'rgba(0,212,255,0.07)', border: '1px solid rgba(0,212,255,0.25)',
+          borderRadius: 6, padding: '0.6rem 1rem', marginBottom: '0.75rem',
+        }}>
+          <span style={{ color: COLOR_ACCENT, fontWeight: 600, fontSize: '0.82rem' }}>
+            {selected.length} incidente{selected.length > 1 ? 's' : ''} seleccionado{selected.length > 1 ? 's' : ''}
+          </span>
+          <input
+            className="inc__claim-input"
+            type="text"
+            placeholder="Nro reclamo común"
+            value={bulkClaim}
+            onChange={e => setBulkClaim(e.target.value)}
+            style={{ minWidth: 140 }}
+          />
+          <select
+            className="inc__ws-select"
+            value={bulkStatus}
+            onChange={e => setBulkStatus(e.target.value)}
+            style={{ color: WORK_STATUS_CFG[bulkStatus]?.color, borderColor: WORK_STATUS_CFG[bulkStatus]?.color + '88', background: WORK_STATUS_CFG[bulkStatus]?.bg }}
+          >
+            <option value="active">Active</option>
+            <option value="in_progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+          </select>
+          <button
+            className="btn btn__secondary btn__outline"
+            onClick={handleBulkSave}
+            disabled={!bulkClaim.trim() || saving}
+            style={{ padding: '0.25rem 0.75rem' }}
+          >
+            {saving ? '…' : 'Asignar a seleccionados'}
+          </button>
+          <button
+            style={{ background: 'none', border: 'none', color: COLOR_MUTED, cursor: 'pointer', fontSize: '0.8rem' }}
+            onClick={() => setSelected([])}
+          >
+            Cancelar
+          </button>
+        </div>
+      )}
+
+      <div className="inc__table-wrap">
+        <table className="inc__table">
+          <thead>
+            <tr>
+              <th style={{ width: 32 }}>
+                <input
+                  type="checkbox"
+                  checked={selected.length === rows.length && rows.length > 0}
+                  onChange={toggleAll}
+                  style={{ cursor: 'pointer', accentColor: COLOR_ACCENT }}
+                />
+              </th>
+              <th>S</th>
+              <th>Severity</th>
+              <th>Network</th>
+              <th>Device</th>
+              <th>WAN</th>
+              <th>Detected</th>
+              <th>Status</th>
+              <th>Claim #</th>
+              <th>SLA</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(r => (
+              <OpenIncidentRow
+                key={r._id}
+                inc={r}
+                onSave={onSave}
+                onToggleSLA={onToggleSLA}
+                onNewIncident={onNewIncident}
+                selected={selected.includes(r._id)}
+                onToggleSelect={toggleSelect}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   )
 }
 
@@ -566,6 +686,56 @@ useEffect(() => {
     }
   }, [])
 
+  const handleToggleSLA = useCallback(async (id, countsSLA) => {
+    const updated = await toggleIncidentSLA(id, countsSLA)
+    if (!updated) return
+    setData(prev => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        recentOpen: prev.recentOpen.map(i => i._id === id ? { ...i, countsSLA } : i),
+      }
+    })
+  }, [])
+
+  const handleNewIncident = useCallback((incident) => {
+    if (!incident) return
+    setData(prev => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        recentOpen: [incident, ...prev.recentOpen],
+        kpis: { ...prev.kpis, openIncidents: prev.kpis.openIncidents + 1 },
+      }
+    })
+  }, [])
+
+  const handleBulkClaim = useCallback(async (ids, claimNumber, workStatus) => {
+    const modified = await bulkAssignClaim(ids, claimNumber, workStatus)
+    if (modified === null) return null
+
+    setData(prev => {
+      if (!prev) return prev
+      const updatedOpen = prev.recentOpen.map(i =>
+        ids.includes(i._id)
+          ? { ...i, claimNumber, workStatus: workStatus ?? i.workStatus }
+          : i
+      ).filter(i => workStatus !== 'resolved' || !ids.includes(i._id))
+
+      return {
+        ...prev,
+        recentOpen: updatedOpen,
+        kpis: {
+          ...prev.kpis,
+          openIncidents: workStatus === 'resolved'
+            ? Math.max(0, prev.kpis.openIncidents - ids.length)
+            : prev.kpis.openIncidents,
+        },
+      }
+    })
+    return modified
+  }, [])
+
   const orgName = orgs.find(o => o.id === selectedOrg)?.name || ''
 
   return (
@@ -737,7 +907,16 @@ useEffect(() => {
               <p className="inc__table-hint">
                 Ordená por estado: <strong style={{color: COLOR_ERROR}}>Active</strong> primero, luego <strong style={{color: COLOR_WARNING}}>In Progress</strong>. Al marcar como <strong style={{color: COLOR_SUCCESS}}>Resolved</strong> el incidente se guarda con timestamp y pasa al reporte histórico.
               </p>
-              <OpenIncidentsTable rows={data.recentOpen} onSave={handleSaveIncident} />
+              <OpenIncidentsTable
+                rows={[...data.recentOpen].sort((a, b) => {
+                  const order = { DEVICE_OFFLINE: 0, UPLINK_DOWN: 1 }
+                  return (order[a.incidentType] ?? 2) - (order[b.incidentType] ?? 2)
+                })}
+                onSave={handleSaveIncident}
+                onBulkClaim={handleBulkClaim}
+                onToggleSLA={handleToggleSLA}
+                onNewIncident={handleNewIncident}
+              />
             </div>
           )}
 
