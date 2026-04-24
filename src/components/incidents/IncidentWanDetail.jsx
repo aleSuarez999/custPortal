@@ -27,7 +27,7 @@ function StatusDot({ status }) {
   )
 }
 
-const TYPE_ICON = { MX: '🔒', MG: '📡', MS: '🔀', MR: '📶', OTHER: '📦' }
+const TYPE_ICON = { MX: '📟', MG: '📶', MS: '🔀', MR: '🛜', OTHER: '📦' }
 
 // ── Sección WAN links del MX + dispositivos downstream offline ────────────────
 function WanLinksTable({ wanLinks, incidentInterface, networkDevices }) {
@@ -121,25 +121,52 @@ function WanLinksTable({ wanLinks, incidentInterface, networkDevices }) {
 }
 
 // ── Sección LTE del MG ────────────────────────────────────────────────────────
-function LteDetail({ lteUplinks }) {
+const LTE_FIELD = { fontSize: '0.7rem', fontFamily: 'monospace', color: '#94a3b8' }
+const LTE_VAL   = { fontSize: '0.7rem', fontFamily: 'monospace', color: '#e2e8f0' }
+
+function LteField({ label, value }) {
+  if (value == null || value === '') return null
+  return (
+    <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'baseline' }}>
+      <span style={LTE_FIELD}>{label}</span>
+      <span style={LTE_VAL}>{value}</span>
+    </div>
+  )
+}
+
+function LteDetail({ lteUplinks, imei }) {
   if (!lteUplinks?.length) return null
   return (
-    <div style={{ marginTop: '0.4rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+    <div style={{ marginTop: '0.45rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
       {lteUplinks.map((u, i) => {
         const lteDown = u.status && u.status !== 'active' && u.status !== 'ready'
         return (
           <div key={i} style={{
-            fontSize: '0.72rem', fontFamily: 'monospace',
-            background: lteDown ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.08)',
-            border: `1px solid ${lteDown ? '#ef444444' : '#10b98133'}`,
-            borderRadius: 4, padding: '0.2rem 0.5rem',
-            color: lteDown ? '#ef4444' : '#10b981',
+            background: lteDown ? 'rgba(239,68,68,0.07)' : 'rgba(16,185,129,0.05)',
+            border: `1px solid ${lteDown ? '#ef444430' : '#10b98125'}`,
+            borderRadius: 5, padding: '0.35rem 0.6rem',
           }}>
-            {u.interface} · {u.status || '—'}
-            {u.provider && <span style={{ color: '#94a3b8', marginLeft: 4 }}>{u.provider}</span>}
-            {u.signalType && <span style={{ color: '#94a3b8', marginLeft: 4 }}>{u.signalType}</span>}
-            {u.rsrp != null && <span style={{ color: '#94a3b8', marginLeft: 4 }}>RSRP {u.rsrp}</span>}
-            {u.ip && <span style={{ marginLeft: 4 }}> · {u.ip}</span>}
+            {/* fila estado */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.25rem' }}>
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: lteDown ? '#ef4444' : '#10b981' }}>
+                {u.interface} · {u.status || '—'}
+              </span>
+              {u.provider   && <span style={{ fontSize: '0.68rem', color: '#64748b' }}>{u.provider}</span>}
+              {u.signalType && <span style={{ fontSize: '0.68rem', color: '#64748b' }}>{u.signalType}</span>}
+              {u.ip         && <span style={{ fontSize: '0.68rem', fontFamily: 'monospace', color: '#94a3b8' }}>{u.ip}</span>}
+            </div>
+            {/* grilla de campos SIM/red */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.15rem 1.2rem' }}>
+              {imei   != null && i === 0 && <LteField label="IMEI"   value={imei} />}
+              <LteField label="ICCID"  value={u.iccid} />
+              <LteField label="IMSI"   value={u.imsi} />
+              <LteField label="MSISDN" value={u.msisdn} />
+              <LteField label="APN"    value={u.apn} />
+              {u.rsrp != null && <LteField label="RSRP" value={`${u.rsrp} dBm`} />}
+              {u.rsrq != null && <LteField label="RSRQ" value={`${u.rsrq} dB`} />}
+              {u.sinr != null && <LteField label="SINR" value={`${u.sinr} dB`} />}
+              {u.rssi != null && <LteField label="RSSI" value={`${u.rssi} dBm`} />}
+            </div>
           </div>
         )
       })}
@@ -148,12 +175,12 @@ function LteDetail({ lteUplinks }) {
 }
 
 // ── Mini-form para crear incidente manual en MG/MS/MR ────────────────────────
-function CreateIncidentForm({ dev, orgId, networkId, onCreated }) {
-  const [open, setOpen]       = useState(false)
-  const [claim, setClaim]     = useState('')
-  const [status, setStatus]   = useState('active')
-  const [saving, setSaving]   = useState(false)
-  const [msg, setMsg]         = useState(null)
+// Solo el panel del formulario; el trigger "+" vive en el header del DeviceCard.
+function CreateIncidentPanel({ dev, orgId, networkId, onCreated, onClose }) {
+  const [claim, setClaim]   = useState('')
+  const [status, setStatus] = useState('active')
+  const [saving, setSaving] = useState(false)
+  const [msg, setMsg]       = useState(null)
 
   const handleCreate = async () => {
     setSaving(true)
@@ -173,35 +200,13 @@ function CreateIncidentForm({ dev, orgId, networkId, onCreated }) {
       setMsg({ error: true, text: 'Error al crear el incidente' })
     } else if (result.conflict) {
       setMsg({ error: false, text: 'Ya existe un incidente abierto para este equipo' })
-      setOpen(false)
+      onClose()
     } else {
       setMsg({ error: false, text: 'Incidente creado' })
-      setOpen(false)
       setClaim('')
+      onClose()
       onCreated?.(result)
     }
-  }
-
-  if (!open) {
-    return (
-      <div style={{ marginTop: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <button
-          onClick={() => setOpen(true)}
-          style={{
-            fontSize: '0.72rem', padding: '0.2rem 0.6rem',
-            background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.3)',
-            borderRadius: 4, color: '#00d4ff', cursor: 'pointer',
-          }}
-        >
-          + Crear incidente
-        </button>
-        {msg && (
-          <span style={{ fontSize: '0.7rem', color: msg.error ? '#ef4444' : '#10b981' }}>
-            {msg.text}
-          </span>
-        )}
-      </div>
-    )
   }
 
   return (
@@ -245,7 +250,7 @@ function CreateIncidentForm({ dev, orgId, networkId, onCreated }) {
         {saving ? '…' : 'Confirmar'}
       </button>
       <button
-        onClick={() => setOpen(false)}
+        onClick={onClose}
         style={{
           fontSize: '0.72rem', padding: '0.2rem 0.4rem',
           background: 'none', border: 'none', color: '#64748b', cursor: 'pointer',
@@ -253,6 +258,116 @@ function CreateIncidentForm({ dev, orgId, networkId, onCreated }) {
       >
         Cancelar
       </button>
+      {msg && (
+        <span style={{ fontSize: '0.7rem', color: msg.error ? '#ef4444' : '#10b981' }}>
+          {msg.text}
+        </span>
+      )}
+    </div>
+  )
+}
+
+// ── Tarjeta de un dispositivo ─────────────────────────────────────────────────
+function DeviceCard({ dev, inc, networkDevices, orgId, networkId, onManualIncidentCreated }) {
+  const [formOpen, setFormOpen] = useState(false)
+  const isDown    = dev.status === 'offline' || dev.status === 'alerting'
+  const canCreate = dev.type !== 'MX'
+
+  return (
+    <div style={{
+      borderRadius: 6,
+      border: `1px solid ${isDown ? '#ef444444' : 'rgba(255,255,255,0.07)'}`,
+      background: isDown ? 'rgba(239,68,68,0.05)' : 'rgba(255,255,255,0.02)',
+      padding: '0.5rem 0.75rem',
+    }}>
+      {/* ── Cabecera ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: '1rem' }}>{TYPE_ICON[dev.type] || '📦'}</span>
+
+        <span style={{ fontWeight: 700, fontSize: '0.8rem', color: isDown ? '#ef4444' : '#e2e8f0' }}>
+          {dev.type}
+        </span>
+
+        <span style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: '#94a3b8' }}>
+          {dev.model || '—'}
+        </span>
+
+        <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: '#64748b' }}>
+          {dev.serial}
+        </span>
+
+        {dev.name && (
+          <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontStyle: 'italic' }}>
+            {dev.name}
+          </span>
+        )}
+
+        <StatusDot status={dev.status} />
+
+        {/* Spacer + elementos del lado derecho */}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          {dev.publicIp && (
+            <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: '#64748b' }}>
+              <IpWhoisTooltip ip={dev.publicIp} />
+            </span>
+          )}
+
+          {canCreate && (
+            <button
+              title={formOpen ? 'Cerrar formulario' : 'Crear incidente manual'}
+              onClick={() => setFormOpen(o => !o)}
+              style={{
+                width: 22, height: 22, borderRadius: '50%',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '1rem', lineHeight: 1, fontWeight: 700,
+                background: formOpen ? 'rgba(100,116,139,0.2)' : 'rgba(0,212,255,0.1)',
+                border: `1px solid ${formOpen ? 'rgba(100,116,139,0.4)' : 'rgba(0,212,255,0.35)'}`,
+                color: formOpen ? '#64748b' : '#00d4ff',
+                cursor: 'pointer', flexShrink: 0,
+              }}
+            >
+              {formOpen ? '×' : '+'}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Detalle WAN (solo MX) ── */}
+      {dev.wanLinks && (
+        <WanLinksTable
+          wanLinks={dev.wanLinks}
+          incidentInterface={inc?.uplinkInterface}
+          networkDevices={networkDevices}
+        />
+      )}
+
+      {/* ── Detalle LTE (solo MG) ── */}
+      {dev.lteUplinks && (
+        <LteDetail lteUplinks={dev.lteUplinks} imei={dev.imei} />
+      )}
+
+      {/* ── Avisos ── */}
+      {dev.type === 'MG' && dev.status === 'offline' && (
+        <div style={{ marginTop: '0.35rem', fontSize: '0.72rem', color: '#ef4444', fontWeight: 600 }}>
+          ⚠ LTE no responde
+        </div>
+      )}
+      {(dev.type === 'MS' || dev.type === 'MR') && isDown && (
+        <div style={{ marginTop: '0.35rem', fontSize: '0.72rem', color: '#f59e0b' }}>
+          ⚠ Puede estar afectado por la caída del MX
+        </div>
+      )}
+
+      {/* ── Formulario crear incidente ── */}
+      {canCreate && formOpen && (
+        <CreateIncidentPanel
+          dev={dev}
+          orgId={orgId}
+          networkId={networkId}
+          onClose={() => setFormOpen(false)}
+          onCreated={onManualIncidentCreated}
+        />
+      )}
     </div>
   )
 }
@@ -299,90 +414,17 @@ export default function IncidentWanDetail({ detail, inc, onManualIncidentCreated
         EQUIPOS DE LA RED — {detail.networkName}
       </p>
 
-      {networkDevices.map((dev, i) => {
-        const isDown = dev.status === 'offline' || dev.status === 'alerting'
-        const cfg    = STATUS_CFG[dev.status] || { color: '#64748b' }
-
-        return (
-          <div key={i} style={{
-            borderRadius: 6,
-            border: `1px solid ${isDown ? '#ef444444' : 'rgba(255,255,255,0.07)'}`,
-            background: isDown ? 'rgba(239,68,68,0.05)' : 'rgba(255,255,255,0.02)',
-            padding: '0.5rem 0.75rem',
-          }}>
-            {/* Cabecera del dispositivo */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '1rem' }}>{TYPE_ICON[dev.type] || '📦'}</span>
-
-              <span style={{
-                fontWeight: 700, fontSize: '0.8rem',
-                color: isDown ? '#ef4444' : '#e2e8f0',
-              }}>
-                {dev.type}
-              </span>
-
-              <span style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: '#94a3b8' }}>
-                {dev.model || '—'}
-              </span>
-
-              <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: '#64748b' }}>
-                {dev.serial}
-              </span>
-
-              {dev.name && (
-                <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontStyle: 'italic' }}>
-                  {dev.name}
-                </span>
-              )}
-
-              <StatusDot status={dev.status} />
-
-              {dev.publicIp && (
-                <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: '#64748b', marginLeft: 'auto' }}>
-                  <IpWhoisTooltip ip={dev.publicIp} />
-                </span>
-              )}
-            </div>
-
-            {/* Detalle WAN (solo MX) */}
-            {dev.wanLinks && (
-              <WanLinksTable wanLinks={dev.wanLinks} incidentInterface={inc?.uplinkInterface} networkDevices={networkDevices} />
-            )}
-
-            {/* Detalle LTE (solo MG) */}
-            {dev.lteUplinks && (
-              <LteDetail lteUplinks={dev.lteUplinks} />
-            )}
-
-            {/* Aviso MG con LTE caído */}
-            {dev.type === 'MG' && dev.status === 'offline' && (
-              <div style={{
-                marginTop: '0.35rem', fontSize: '0.72rem',
-                color: '#ef4444', fontWeight: 600,
-              }}>
-                ⚠ LTE no responde
-              </div>
-            )}
-
-            {/* Aviso MS/MR cascade */}
-            {(dev.type === 'MS' || dev.type === 'MR') && isDown && (
-              <div style={{ marginTop: '0.35rem', fontSize: '0.72rem', color: '#f59e0b' }}>
-                ⚠ Puede estar afectado por la caída del MX
-              </div>
-            )}
-
-            {/* Botón crear incidente manual (solo MG, MS, MR) */}
-            {dev.type !== 'MX' && (
-              <CreateIncidentForm
-                dev={dev}
-                orgId={detail.orgId}
-                networkId={detail.networkId}
-                onCreated={onManualIncidentCreated}
-              />
-            )}
-          </div>
-        )
-      })}
+      {networkDevices.map((dev, i) => (
+        <DeviceCard
+          key={i}
+          dev={dev}
+          inc={inc}
+          networkDevices={networkDevices}
+          orgId={detail.orgId}
+          networkId={detail.networkId}
+          onManualIncidentCreated={onManualIncidentCreated}
+        />
+      ))}
     </div>
   )
 }
