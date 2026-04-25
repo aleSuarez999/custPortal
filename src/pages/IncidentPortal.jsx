@@ -493,7 +493,7 @@ function ResolvedReportTable({ data, onDelete, onToggleSLA }) {
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       {(() => {
-                        if (r.isDuplicateInGroup || !r.downtimeMinutes)
+                        if (r.isDuplicateInGroup || !r.downtimeMinutes || !r.countsSLA)
                           return <span style={{ color: '#475569', fontSize: '0.68rem' }}>—</span>
                         const now = new Date()
                         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
