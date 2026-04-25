@@ -460,16 +460,18 @@ function ResolvedReportTable({ data, onDelete, onToggleSLA }) {
                             title="Mismo equipo y claim — downtime ya contabilizado en el vínculo principal">
                             ↳ mismo equipo
                           </span>
-                        : <span
-                            className="inc__badge"
-                            style={{
-                              background: r.downtimeMinutes > 60 ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
-                              color:      r.downtimeMinutes > 60 ? COLOR_ERROR : COLOR_WARNING,
-                              border:     `1px solid ${r.downtimeMinutes > 60 ? COLOR_ERROR : COLOR_WARNING}44`
-                            }}
-                          >
-                            {r.downtimeHuman}
-                          </span>
+                        : r.countsSLA
+                          ? <span
+                              className="inc__badge"
+                              style={{
+                                background: r.downtimeMinutes > 60 ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
+                                color:      r.downtimeMinutes > 60 ? COLOR_ERROR : COLOR_WARNING,
+                                border:     `1px solid ${r.downtimeMinutes > 60 ? COLOR_ERROR : COLOR_WARNING}44`
+                              }}
+                            >
+                              {r.downtimeHuman}
+                            </span>
+                          : <span style={{ color: COLOR_MUTED, fontSize: '0.72rem' }}>—</span>
                       }
                     </td>
                     <td style={{ textAlign: 'center' }}>
