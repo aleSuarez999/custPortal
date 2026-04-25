@@ -106,11 +106,13 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
 
   const [ws, setWs] = useState(inc.workStatus || 'active')
   const [claim, setClaim] = useState(inc.claimNumber || '')
+  const [notes, setNotes] = useState(inc.resolutionNotes || '')
   const [saving, setSaving] = useState(false)
   const [dirty, setDirty] = useState(false)
 
   const handleWsChange = v => { setWs(v); setDirty(true) }
   const handleClaimChange = v => { setClaim(v); setDirty(true) }
+  const handleNotesChange = v => { setNotes(v); setDirty(true) }
 
   const toggleExpand = async () => {
     const next = !expanded
@@ -132,9 +134,9 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
 
   const handleSave = async () => {
     setSaving(true)
-    await onSave(inc._id, { workStatus: ws, claimNumber: claim })
+    const ok = await onSave(inc._id, { workStatus: ws, claimNumber: claim, resolutionNotes: notes })
     setSaving(false)
-    setDirty(false)
+    if (ok !== false) setDirty(false)
   }
 
   const cfg = WORK_STATUS_CFG[ws] || WORK_STATUS_CFG.active
@@ -222,13 +224,25 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
 
         {/* Claim */}
         <td  className="inc__td-mono" onClick={e => e.stopPropagation()}>
-             <input
-          className="inc__claim-input"
-          type="text"
-          placeholder="Nro reclamo"
-          value={claim}
-          onChange={e => handleClaimChange(e.target.value)}
-        />
+          <input
+            className="inc__claim-input"
+            type="text"
+            placeholder="Nro reclamo"
+            value={claim}
+            onChange={e => handleClaimChange(e.target.value)}
+          />
+        </td>
+
+        {/* Notes */}
+        <td className="inc__td-mono" onClick={e => e.stopPropagation()}>
+          <input
+            className="inc__claim-input"
+            type="text"
+            placeholder="Motivo / notas"
+            value={notes}
+            onChange={e => handleNotesChange(e.target.value)}
+            style={{ minWidth: 90, maxWidth: 160 }}
+          />
         </td>
 
         {/* Toggle SLA */}
@@ -265,7 +279,7 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
       {expanded && (
         <tr>
           <td />
-          <td colSpan={9} style={{ padding: '0.75rem 0.5rem 0.75rem 0' }}>
+          <td colSpan={10} style={{ padding: '0.75rem 0.5rem 0.75rem 0' }}>
             <div
               style={{
                 background: 'rgba(0,0,0,0.15)',
@@ -386,6 +400,7 @@ function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncid
               <th>Detected</th>
               <th>Status</th>
               <th>Claim #</th>
+              <th>Notes</th>
               <th>SLA</th>
               <th></th>
             </tr>
@@ -802,7 +817,7 @@ useEffect(() => {
   // ── Guardar workStatus / claimNumber ──────────────────────────────────────
   const handleSaveIncident = useCallback(async (id, updates) => {
     const updated = await updateIncidentWorkStatus(id, updates)
-    if (!updated) return
+    if (!updated) return false
 
     // Si se marcó como resolved, sacarlo de la lista de abiertos
     if (updates.workStatus === 'resolved') {
@@ -815,17 +830,22 @@ useEffect(() => {
         }
       })
     } else {
-      // Solo actualizar workStatus y claimNumber en la lista
       setData(prev => {
         if (!prev) return prev
         return {
           ...prev,
           recentOpen: prev.recentOpen.map(i =>
-            i._id === id ? { ...i, workStatus: updates.workStatus ?? i.workStatus, claimNumber: updates.claimNumber ?? i.claimNumber } : i
+            i._id === id ? {
+              ...i,
+              workStatus:      updates.workStatus      ?? i.workStatus,
+              claimNumber:     updates.claimNumber     ?? i.claimNumber,
+              resolutionNotes: updates.resolutionNotes ?? i.resolutionNotes,
+            } : i
           )
         }
       })
     }
+    return true
   }, [])
 
   const handleToggleSLA = useCallback(async (id, countsSLA) => {
