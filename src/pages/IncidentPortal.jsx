@@ -99,7 +99,7 @@ function ChartTooltip({ active, payload, label }) {
 }
 
 // ── Fila editable de incidente abierto ────────────────────────────────────────
-function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, onToggleSelect }) {
+function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, onToggleSelect, orgName }) {
   const [expanded, setExpanded] = useState(false)
   const [detail, setDetail] = useState(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
@@ -180,7 +180,14 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
           </div>
         </td>
 
-        <td  className="inc__td-mono" >{inc.networkName || inc.networkId || '—'}</td>
+        <td className="inc__td-mono">
+          {inc.networkName || inc.networkId || '—'}
+          {orgName && (
+            <span style={{ display: 'block', fontSize: '0.65rem', color: COLOR_MUTED, marginTop: '0.1rem' }}>
+              {orgName}
+            </span>
+          )}
+        </td>
 
         <td  className="inc__td-mono" >{inc.deviceSerial || '—'}</td>
       <td>
@@ -285,7 +292,7 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
 }
 
 // ── Tabla incidentes abiertos ─────────────────────────────────────────────────
-function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncident }) {
+function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncident, orgs, showOrg }) {
   const [selected, setSelected] = useState([])
   const [bulkClaim, setBulkClaim] = useState('')
   const [bulkStatus, setBulkStatus] = useState('in_progress')
@@ -393,6 +400,7 @@ function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncid
                 onNewIncident={onNewIncident}
                 selected={selected.includes(r._id)}
                 onToggleSelect={toggleSelect}
+                orgName={showOrg ? (orgs?.find(o => o.id === r.orgId)?.name ?? '') : ''}
               />
             ))}
           </tbody>
@@ -1084,6 +1092,8 @@ useEffect(() => {
                 onBulkClaim={handleBulkClaim}
                 onToggleSLA={handleToggleSLA}
                 onNewIncident={handleNewIncident}
+                orgs={orgs}
+                showOrg={selectedOrg === 'ALL'}
               />
             </div>
           )}
