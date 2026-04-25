@@ -11,6 +11,7 @@ import {
   toggleIncidentSLA,
   getResolvedIncidentsReport, getIncidentNetworkDetail,
   deleteIncident,
+  getRecurrenceReport,
 } from '../utils/api'
 import Text from '../components/Text'
 import IncidentWanDetail from '../components/incidents/IncidentWanDetail'
@@ -406,23 +407,26 @@ function ResolvedReportTable({ data, onDelete, onToggleSLA }) {
   if (!data) return null
   const { summary, incidents } = data
 
+  // Solo incidentes cerrados manualmente — los auto-recuperados van a Reincidencias
+  const manualIncidents = incidents.filter(r => !r.resolvedAt)
+
   return (
     <div className="inc__panel">
       <Text as="h3" className="inc__panel-title">
         Resolved Incidents Report
-        <span className="inc__badge inc__badge--count">{summary.total}</span>
+        <span className="inc__badge inc__badge--count">{manualIncidents.length}</span>
       </Text>
 
       {/* Métricas — solo cuentan incidentes con countsSLA:true */}
       <div className="inc__kpi-row" style={{ marginBottom: '1rem' }}>
-        <KpiCard label="Total Resolved"   value={summary.total} accent />
+        <KpiCard label="Total Resolved"   value={manualIncidents.length} accent />
         <KpiCard label="SLA Downtime"     value={summary.totalDowntimeHuman} sub="solo incidentes SLA" />
         <KpiCard label="Avg SLA Downtime" value={summary.avgDowntimeHuman}   sub="por evento SLA" />
         <KpiCard label="Max SLA Downtime" value={summary.maxDowntimeHuman}   sub="evento único" />
       </div>
 
-      {incidents.length === 0
-        ? <p className="inc__empty">No resolved incidents in this period</p>
+      {manualIncidents.length === 0
+        ? <p className="inc__empty">No hay incidentes cerrados manualmente en este período</p>
         : (
           <div className="inc__table-wrap">
             <table className="inc__table">
@@ -432,29 +436,23 @@ function ResolvedReportTable({ data, onDelete, onToggleSLA }) {
                   <th>Network</th>
                   <th>Device</th>
                   <th>LinkDown</th>
-                  <th>LinkUp</th>
+                  <th>Resuelto</th>
                   <th>Downtime</th>
                   <th title="¿Este incidente acumula tiempo de SLA?">SLA</th>
+                  <th title="MTTR contractual: 8hs">MTTR</th>
                   <th>Claim #</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
-                {incidents.map((r, i) => (
+                {manualIncidents.map((r, i) => (
                   <tr key={r._id || i} style={r.isDuplicateInGroup ? { opacity: 0.6 } : {}}>
                     <td><span className="inc__badge inc__badge--type">{r.incidentType}</span></td>
                     <td className="inc__td-mono">{r.networkName || r.networkId || '—'}</td>
                     <td className="inc__td-mono">{r.deviceSerial || '—'}</td>
                     <td className="inc__td-mono">{fmtDate(r.detectedAt)}</td>
                     <td className="inc__td-mono">
-                      {r.effectiveResolvedAt ? (
-                        <span>
-                          {fmtDate(r.effectiveResolvedAt)}
-                          <span style={{ marginLeft: 4, fontSize: '0.62rem', color: '#475569' }}>
-                            {r.resolvedAt ? '⟳ auto' : '✎ manual'}
-                          </span>
-                        </span>
-                      ) : '—'}
+                      {r.effectiveResolvedAt ? fmtDate(r.effectiveResolvedAt) : '—'}
                     </td>
                     <td>
                       {r.isDuplicateInGroup
@@ -491,6 +489,25 @@ function ResolvedReportTable({ data, onDelete, onToggleSLA }) {
                         {r.countsSLA ? 'SLA' : '—'}
                       </button>
                     </td>
+                    <td style={{ textAlign: 'center' }}>
+                      {(() => {
+                        if (r.isDuplicateInGroup || !r.downtimeMinutes)
+                          return <span style={{ color: '#475569', fontSize: '0.68rem' }}>—</span>
+                        const now = new Date()
+                        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+                        const periodMin = Math.round((now - monthStart) / 60000)
+                        const unavailPct = ((r.downtimeMinutes / periodMin) * 100).toFixed(2)
+                        const ok = r.downtimeMinutes <= 480
+                        return (
+                          <span
+                            title={`${r.downtimeHuman} sobre ${Math.round(periodMin/60/24)} días del mes → ${unavailPct}% indisponibilidad${ok ? '' : ' — incumple MTTR contractual (8hs)'}`}
+                            style={{ fontSize: '0.72rem', fontWeight: 700, color: ok ? '#10b981' : '#ef4444' }}
+                          >
+                            {ok ? '✔' : `${unavailPct}%`}
+                          </span>
+                        )
+                      })()}
+                    </td>
                     <td className="inc__td-mono">{r.claimNumber || '—'}</td>
                     <td style={{ textAlign: 'center', padding: '0 0.4rem' }}>
                       <button
@@ -519,6 +536,76 @@ function ResolvedReportTable({ data, onDelete, onToggleSLA }) {
   )
 }
 
+// ── Tabla reincidencias ───────────────────────────────────────────────────
+function RecurrenceTable({ data }) {
+  if (!data) return <p className="inc__empty">No hay datos de reincidencias para este período.</p>
+
+  const networks = data.networks ?? data.recurrences ?? []
+
+  if (networks.length === 0)
+    return <p className="inc__empty">Sin reincidencias en el período seleccionado.</p>
+
+  return (
+    <div className="inc__panel">
+      <Text as="h3" className="inc__panel-title">
+        Reincidencias — caídas recuperadas automáticamente
+        <span className="inc__badge inc__badge--count">{networks.length}</span>
+      </Text>
+      <p className="inc__table-hint">
+        Sitios con más de una caída que se restableció sola en el período. No incluye incidentes cerrados manualmente.
+      </p>
+      <div className="inc__table-wrap">
+        <table className="inc__table">
+          <thead>
+            <tr>
+              <th>Network</th>
+              <th>Device</th>
+              <th>Tipo</th>
+              <th style={{ textAlign: 'center' }}>Caídas</th>
+              <th>Última caída</th>
+              <th>Última recuperación</th>
+              <th>Downtime total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {networks.map((n, i) => (
+              <tr key={n.networkId || n._id || i}>
+                <td className="inc__td-mono">{n.networkName || n.networkId || '—'}</td>
+                <td className="inc__td-mono">{n.deviceSerial || '—'}</td>
+                <td>
+                  <span className="inc__badge inc__badge--type">
+                    {n.incidentType || n.type || '—'}
+                  </span>
+                </td>
+                <td style={{ textAlign: 'center' }}>
+                  <span className="inc__badge" style={{
+                    background: (n.count ?? n.occurrences ?? 0) >= 5
+                      ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
+                    color: (n.count ?? n.occurrences ?? 0) >= 5 ? COLOR_ERROR : COLOR_WARNING,
+                    border: `1px solid ${(n.count ?? n.occurrences ?? 0) >= 5 ? COLOR_ERROR : COLOR_WARNING}44`,
+                    fontWeight: 700,
+                  }}>
+                    {n.count ?? n.occurrences ?? '—'}
+                  </span>
+                </td>
+                <td className="inc__td-mono">
+                  {n.lastDetectedAt ? fmtDate(n.lastDetectedAt) : '—'}
+                </td>
+                <td className="inc__td-mono">
+                  {n.lastResolvedAt ? fmtDate(n.lastResolvedAt) : '—'}
+                </td>
+                <td className="inc__td-mono">
+                  {n.totalDowntimeHuman ?? n.downtimeHuman ?? '—'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 // ── Selector de organización ──────────────────────────────────────────────────
 function OrgSelector({ orgs, value, onChange }) {
   return (
@@ -543,12 +630,14 @@ export default function IncidentManagement() {
   const [orgs, setOrgs]               = useState([])
   const [selectedOrg, setSelectedOrg] = useState('')
   const [data, setData]               = useState(null)
-  const [resolvedData, setResolvedData] = useState(null)
-  const [loading, setLoading]         = useState(false)
+  const [resolvedData, setResolvedData]       = useState(null)
+  const [recurrenceData, setRecurrenceData]   = useState(null)
+  const [loading, setLoading]                 = useState(false)
   const [loadingResolved, setLoadingResolved] = useState(false)
-  const [error, setError]             = useState(null)
-  const [days, setDays]               = useState(7)
-  const [activeTab, setActiveTab]     = useState('open')   // 'open' | 'resolved'
+  const [loadingRecurrence, setLoadingRecurrence] = useState(false)
+  const [error, setError]                     = useState(null)
+  const [days, setDays]                       = useState(7)
+  const [activeTab, setActiveTab]             = useState('open')   // 'open' | 'resolved' | 'recurrence'
 
   // ── Cargar lista de orgs al montar ────────────────────────────────────────
   /*
@@ -704,6 +793,16 @@ useEffect(() => {
     getResolvedIncidentsReport(selectedOrg, days)
       .then(resp => setResolvedData(resp || null))
       .finally(() => setLoadingResolved(false))
+  }, [activeTab, selectedOrg, days])
+
+  // ── Cargar reporte de reincidencias cuando se activa esa pestaña ──────────
+  useEffect(() => {
+    if (activeTab !== 'recurrence' || !selectedOrg) return
+    setLoadingRecurrence(true)
+    const orgParam = selectedOrg === 'ALL' ? null : selectedOrg
+    getRecurrenceReport(orgParam, days)
+      .then(resp => setRecurrenceData(resp || null))
+      .finally(() => setLoadingRecurrence(false))
   }, [activeTab, selectedOrg, days])
 
   // ── Guardar workStatus / claimNumber ──────────────────────────────────────
@@ -971,6 +1070,12 @@ useEffect(() => {
             >
               Resolved Report
             </button>
+            <button
+              className={`inc__tab${activeTab === 'recurrence' ? ' inc__tab--active' : ''}`}
+              onClick={() => setActiveTab('recurrence')}
+            >
+              Reincidencias
+            </button>
           </div>
 
           {/* ── Panel Open ────────────────────────────────────────────────── */}
@@ -1002,6 +1107,13 @@ useEffect(() => {
             loadingResolved
               ? <div className="inc__loading"><span className="inc__spinner" /> Loading resolved report…</div>
               : <ResolvedReportTable data={resolvedData} onDelete={handleDeleteIncident} onToggleSLA={handleToggleSLAResolved} />
+          )}
+
+          {/* ── Panel Reincidencias ───────────────────────────────────────── */}
+          {activeTab === 'recurrence' && (
+            loadingRecurrence
+              ? <div className="inc__loading"><span className="inc__spinner" /> Cargando reincidencias…</div>
+              : <RecurrenceTable data={recurrenceData} />
           )}
 
           {/* Footer */}
