@@ -179,6 +179,20 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
             <span style={{ fontSize: '0.65rem', color: '#64748b', fontFamily: 'monospace' }}>
               {inc.incidentType === 'DEVICE_OFFLINE' ? 'offline' : inc.uplinkInterface || inc.incidentType}
             </span>
+            {(inc.recurrenceCount > 0) && (
+              <span
+                title={`Recuperó automáticamente ${inc.recurrenceCount}x mientras estaba en tratamiento${inc.lastAutoResolvedAt ? ` | Última: ${new Date(inc.lastAutoResolvedAt).toLocaleString('es-AR')}` : ''}`}
+                style={{
+                  fontSize: '0.62rem', fontWeight: 700, fontFamily: 'monospace',
+                  color: '#f59e0b', background: 'rgba(245,158,11,0.12)',
+                  border: '1px solid rgba(245,158,11,0.3)',
+                  borderRadius: 3, padding: '0 0.3rem', cursor: 'default',
+                  alignSelf: 'flex-start',
+                }}
+              >
+                ↻ {inc.recurrenceCount}
+              </span>
+            )}
           </div>
         </td>
 
@@ -859,6 +873,7 @@ useEffect(() => {
               workStatus:      updates.workStatus      ?? i.workStatus,
               claimNumber:     updates.claimNumber     ?? i.claimNumber,
               resolutionNotes: updates.resolutionNotes ?? i.resolutionNotes,
+              // recurrenceCount y lastAutoResolvedAt los maneja el cron, no el operador
             } : i
           )
         }
