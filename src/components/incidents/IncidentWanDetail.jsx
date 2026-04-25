@@ -372,8 +372,12 @@ function CreateIncidentPanel({ dev, orgId, networkId, onCreated, onClose }) {
 // ── Tarjeta de un dispositivo ─────────────────────────────────────────────────
 function DeviceCard({ dev, inc, networkDevices, orgId, networkId, onManualIncidentCreated }) {
   const [formOpen, setFormOpen] = useState(false)
-  const isDown    = dev.status === 'offline' || dev.status === 'alerting'
-  const canCreate = dev.type !== 'MX'
+  const isDown       = dev.status === 'offline' || dev.status === 'alerting'
+  const canCreate    = dev.type !== 'MX'
+  const hasOpenInc   = (dev.openIncidents?.length ?? 0) > 0
+  const openIncLabel = hasOpenInc
+    ? dev.openIncidents.map(i => i.uplinkInterface || 'device').join(', ')
+    : ''
 
   return (
     <div style={{
@@ -389,6 +393,15 @@ function DeviceCard({ dev, inc, networkDevices, orgId, networkId, onManualIncide
         <span style={{ fontWeight: 700, fontSize: '0.8rem', color: isDown ? '#ef4444' : '#e2e8f0' }}>
           {dev.type}
         </span>
+
+        {hasOpenInc && (
+          <span
+            title={`Incidente abierto: ${openIncLabel}`}
+            style={{ fontSize: '0.85rem', lineHeight: 1, cursor: 'default' }}
+          >
+            🚨
+          </span>
+        )}
 
         <span style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: '#94a3b8' }}>
           {dev.model || '—'}

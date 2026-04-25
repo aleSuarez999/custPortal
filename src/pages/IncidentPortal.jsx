@@ -584,30 +584,49 @@ function RecurrenceTable({ data }) {
           <thead>
             <tr>
               <th>Network</th>
+              <th>WAN</th>
               <th style={{ textAlign: 'center' }}>Caídas</th>
               <th>Downtime total</th>
+              <th>Prom.</th>
             </tr>
           </thead>
           <tbody>
-            {networks.map((n, i) => (
-              <tr key={n.networkId || n._id || i}>
-                <td className="inc__td-mono">{n.networkName || '—'}</td>
-                <td style={{ textAlign: 'center' }}>
-                  <span className="inc__badge" style={{
-                    background: (n.count ?? n.occurrences ?? 0) >= 5
-                      ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
-                    color: (n.count ?? n.occurrences ?? 0) >= 5 ? COLOR_ERROR : COLOR_WARNING,
-                    border: `1px solid ${(n.count ?? n.occurrences ?? 0) >= 5 ? COLOR_ERROR : COLOR_WARNING}44`,
-                    fontWeight: 700,
-                  }}>
-                    {n.count ?? n.occurrences ?? '—'}
-                  </span>
-                </td>
-                <td className="inc__td-mono">
-                  {n.totalDowntimeHuman ?? n.downtimeHuman ?? '—'}
-                </td>
-              </tr>
-            ))}
+            {networks.map((n, i) => {
+              const count = n.count ?? n.occurrences ?? 0
+              const iface = n.uplinkInterface
+              return (
+                <tr key={`${n.networkId}-${iface}-${i}`}>
+                  <td className="inc__td-mono">{n.networkName || '—'}</td>
+                  <td className="inc__td-mono">
+                    {iface
+                      ? (
+                        <span className="inc__badge" style={{
+                          background: 'rgba(0,212,255,0.08)',
+                          color: '#00d4ff',
+                          border: '1px solid rgba(0,212,255,0.25)',
+                          fontFamily: 'monospace', fontSize: '0.72rem',
+                        }}>
+                          {iface}
+                        </span>
+                      )
+                      : <span style={{ color: '#64748b', fontSize: '0.72rem' }}>device</span>
+                    }
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    <span className="inc__badge" style={{
+                      background: count >= 5 ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
+                      color:  count >= 5 ? COLOR_ERROR : COLOR_WARNING,
+                      border: `1px solid ${count >= 5 ? COLOR_ERROR : COLOR_WARNING}44`,
+                      fontWeight: 700,
+                    }}>
+                      {count}
+                    </span>
+                  </td>
+                  <td className="inc__td-mono">{n.totalDowntimeHuman ?? '—'}</td>
+                  <td className="inc__td-mono" style={{ color: '#64748b' }}>{n.avgDowntimeHuman ?? '—'}</td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>
