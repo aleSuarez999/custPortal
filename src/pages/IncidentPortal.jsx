@@ -561,24 +561,14 @@ function RecurrenceTable({ data }) {
           <thead>
             <tr>
               <th>Network</th>
-              <th>Device</th>
-              <th>Tipo</th>
               <th style={{ textAlign: 'center' }}>Caídas</th>
-              <th>Última caída</th>
-              <th>Última recuperación</th>
               <th>Downtime total</th>
             </tr>
           </thead>
           <tbody>
             {networks.map((n, i) => (
               <tr key={n.networkId || n._id || i}>
-                <td className="inc__td-mono">{n.networkName || n.networkId || '—'}</td>
-                <td className="inc__td-mono">{n.deviceSerial || '—'}</td>
-                <td>
-                  <span className="inc__badge inc__badge--type">
-                    {n.incidentType || n.type || '—'}
-                  </span>
-                </td>
+                <td className="inc__td-mono">{n.networkName || '—'}</td>
                 <td style={{ textAlign: 'center' }}>
                   <span className="inc__badge" style={{
                     background: (n.count ?? n.occurrences ?? 0) >= 5
@@ -589,12 +579,6 @@ function RecurrenceTable({ data }) {
                   }}>
                     {n.count ?? n.occurrences ?? '—'}
                   </span>
-                </td>
-                <td className="inc__td-mono">
-                  {n.lastDetectedAt ? fmtDate(n.lastDetectedAt) : '—'}
-                </td>
-                <td className="inc__td-mono">
-                  {n.lastResolvedAt ? fmtDate(n.lastResolvedAt) : '—'}
                 </td>
                 <td className="inc__td-mono">
                   {n.totalDowntimeHuman ?? n.downtimeHuman ?? '—'}
