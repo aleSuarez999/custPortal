@@ -48,6 +48,14 @@ const fmtDate = d => new Date(d).toLocaleString('en-GB', {
   day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'
 })
 
+// Convierte una fecha a formato "YYYY-MM-DDTHH:mm" para input datetime-local (hora local)
+const toDatetimeLocal = d => {
+  if (!d) return ''
+  const dt = new Date(d)
+  const pad = n => String(n).padStart(2, '0')
+  return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`
+}
+
 function formatDuration(minutes) {
   if (!minutes || minutes <= 0) return '0m'
   const h = Math.floor(minutes / 60)
@@ -108,12 +116,15 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
   const [ws, setWs] = useState(inc.workStatus || 'active')
   const [claim, setClaim] = useState(inc.claimNumber || '')
   const [notes, setNotes] = useState(inc.resolutionNotes || '')
+  const [detectedAt, setDetectedAt] = useState(inc.detectedAt || null)
+  const [editingDetected, setEditingDetected] = useState(false)
   const [saving, setSaving] = useState(false)
   const [dirty, setDirty] = useState(false)
 
   const handleWsChange = v => { setWs(v); setDirty(true) }
   const handleClaimChange = v => { setClaim(v); setDirty(true) }
   const handleNotesChange = v => { setNotes(v); setDirty(true) }
+  const handleDetectedChange = v => { setDetectedAt(v ? new Date(v) : null); setDirty(true) }
 
   const toggleExpand = async () => {
     const next = !expanded
@@ -135,9 +146,9 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
 
   const handleSave = async () => {
     setSaving(true)
-    const ok = await onSave(inc._id, { workStatus: ws, claimNumber: claim, resolutionNotes: notes })
+    const ok = await onSave(inc._id, { workStatus: ws, claimNumber: claim, resolutionNotes: notes, detectedAt })
     setSaving(false)
-    if (ok !== false) setDirty(false)
+    if (ok !== false) { setDirty(false); setEditingDetected(false) }
   }
 
   const cfg = WORK_STATUS_CFG[ws] || WORK_STATUS_CFG.active
@@ -225,7 +236,28 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
           : <span style={{ color: '#64748b' }}>—</span>
         }
       </td>
-        <td  className="inc__td-mono">{fmtDate(inc.detectedAt)}</td>
+        <td className="inc__td-mono" onClick={e => e.stopPropagation()}>
+          {editingDetected
+            ? <input
+                type="datetime-local"
+                defaultValue={toDatetimeLocal(detectedAt)}
+                onChange={e => handleDetectedChange(e.target.value)}
+                style={{
+                  fontSize: '0.7rem', padding: '0.15rem 0.3rem',
+                  background: '#1e293b', color: '#e2e8f0',
+                  border: '1px solid #3b82f6', borderRadius: 4, outline: 'none',
+                  width: '11rem',
+                }}
+              />
+            : <span
+                title="Click para editar la fecha de detección"
+                onClick={() => setEditingDetected(true)}
+                style={{ cursor: 'pointer', borderBottom: '1px dashed #475569' }}
+              >
+                {detectedAt ? fmtDate(detectedAt) : <span style={{ color: COLOR_WARNING, fontStyle: 'italic' }}>sin fecha</span>}
+              </span>
+          }
+        </td>
 
         {/* Selector estado */}
         <td  className="inc__td-mono" onClick={e => e.stopPropagation()}>
@@ -445,15 +477,19 @@ function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncid
 }
 
 // ── Fila editable del reporte de resueltos ────────────────────────────────────
-function ResolvedRow({ r, onDelete, onToggleSLA, onSaveNotes }) {
-  const [notes, setNotes]   = useState(r.resolutionNotes || '')
+function ResolvedRow({ r, onDelete, onToggleSLA, onSave }) {
+  const [notes, setNotes]           = useState(r.resolutionNotes || '')
+  const [detectedAt, setDetectedAt] = useState(r.detectedAt || null)
+  const [resolvedAt, setResolvedAt] = useState(r.resolvedAt || null)
+  const [editingDetected, setEditingDetected] = useState(false)
+  const [editingResolved, setEditingResolved] = useState(false)
   const [dirty, setDirty]   = useState(false)
   const [saving, setSaving] = useState(false)
 
   const handleSave = async () => {
     setSaving(true)
-    const ok = await onSaveNotes(r._id, notes)
-    if (ok !== false) setDirty(false)
+    const ok = await onSave(r._id, { resolutionNotes: notes, detectedAt, resolvedAt })
+    if (ok !== false) { setDirty(false); setEditingDetected(false); setEditingResolved(false) }
     setSaving(false)
   }
 
@@ -462,9 +498,49 @@ function ResolvedRow({ r, onDelete, onToggleSLA, onSaveNotes }) {
       <td><span className="inc__badge inc__badge--type">{r.incidentType}</span></td>
       <td className="inc__td-mono">{r.networkName || r.networkId || '—'}</td>
       <td className="inc__td-mono">{r.deviceSerial || '—'}</td>
-      <td className="inc__td-mono">{fmtDate(r.detectedAt)}</td>
       <td className="inc__td-mono">
-        {r.effectiveResolvedAt ? fmtDate(r.effectiveResolvedAt) : '—'}
+        {editingDetected
+          ? <input
+              type="datetime-local"
+              defaultValue={toDatetimeLocal(detectedAt)}
+              onChange={e => { setDetectedAt(e.target.value ? new Date(e.target.value) : null); setDirty(true) }}
+              style={{
+                fontSize: '0.7rem', padding: '0.15rem 0.3rem',
+                background: '#1e293b', color: '#e2e8f0',
+                border: '1px solid #3b82f6', borderRadius: 4, outline: 'none',
+                width: '11rem',
+              }}
+            />
+          : <span
+              title="Click para editar Link Down"
+              onClick={() => setEditingDetected(true)}
+              style={{ cursor: 'pointer', borderBottom: '1px dashed #475569' }}
+            >
+              {detectedAt ? fmtDate(detectedAt) : <span style={{ color: COLOR_WARNING, fontStyle: 'italic' }}>sin fecha</span>}
+            </span>
+        }
+      </td>
+      <td className="inc__td-mono">
+        {editingResolved
+          ? <input
+              type="datetime-local"
+              defaultValue={toDatetimeLocal(resolvedAt || r.effectiveResolvedAt)}
+              onChange={e => { setResolvedAt(e.target.value ? new Date(e.target.value) : null); setDirty(true) }}
+              style={{
+                fontSize: '0.7rem', padding: '0.15rem 0.3rem',
+                background: '#1e293b', color: '#e2e8f0',
+                border: '1px solid #3b82f6', borderRadius: 4, outline: 'none',
+                width: '11rem',
+              }}
+            />
+          : <span
+              title="Click para editar Link Up"
+              onClick={() => setEditingResolved(true)}
+              style={{ cursor: 'pointer', borderBottom: '1px dashed #475569' }}
+            >
+              {(resolvedAt || r.effectiveResolvedAt) ? fmtDate(resolvedAt || r.effectiveResolvedAt) : '—'}
+            </span>
+        }
       </td>
       <td>
         {r.isDuplicateInGroup
@@ -575,7 +651,7 @@ function ResolvedRow({ r, onDelete, onToggleSLA, onSaveNotes }) {
 }
 
 // ── Tabla reporte resueltos ───────────────────────────────────────────────────
-function ResolvedReportTable({ data, onDelete, onToggleSLA, onSaveNotes }) {
+function ResolvedReportTable({ data, onDelete, onToggleSLA, onSave }) {
   if (!data) return null
   const { incidents } = data
 
@@ -634,7 +710,7 @@ function ResolvedReportTable({ data, onDelete, onToggleSLA, onSaveNotes }) {
                     r={r}
                     onDelete={onDelete}
                     onToggleSLA={onToggleSLA}
-                    onSaveNotes={onSaveNotes}
+                    onSave={onSave}
                   />
                 ))}
               </tbody>
@@ -1172,7 +1248,7 @@ useEffect(() => {
               workStatus:      updates.workStatus      ?? i.workStatus,
               claimNumber:     updates.claimNumber     ?? i.claimNumber,
               resolutionNotes: updates.resolutionNotes ?? i.resolutionNotes,
-              // recurrenceCount y lastAutoResolvedAt los maneja el cron, no el operador
+              detectedAt:      updates.detectedAt      ?? i.detectedAt,
             } : i
           )
         }
@@ -1245,15 +1321,20 @@ useEffect(() => {
     })
   }, [])
 
-  const handleSaveResolvedNotes = useCallback(async (id, resolutionNotes) => {
-    const updated = await updateIncidentWorkStatus(id, { resolutionNotes })
+  const handleSaveResolved = useCallback(async (id, updates) => {
+    const updated = await updateIncidentWorkStatus(id, updates)
     if (!updated) return false
     setResolvedData(prev => {
       if (!prev) return prev
       return {
         ...prev,
         incidents: prev.incidents.map(i =>
-          String(i._id) === String(id) ? { ...i, resolutionNotes } : i
+          String(i._id) === String(id) ? {
+            ...i,
+            resolutionNotes: updates.resolutionNotes ?? i.resolutionNotes,
+            detectedAt:      updates.detectedAt      ?? i.detectedAt,
+            resolvedAt:      updates.resolvedAt      ?? i.resolvedAt,
+          } : i
         ),
       }
     })
@@ -1482,7 +1563,7 @@ useEffect(() => {
           {activeTab === 'resolved' && (
             loadingResolved
               ? <div className="inc__loading"><span className="inc__spinner" /> Loading resolved report…</div>
-              : <ResolvedReportTable data={resolvedData} onDelete={handleDeleteIncident} onToggleSLA={handleToggleSLAResolved} onSaveNotes={handleSaveResolvedNotes} />
+              : <ResolvedReportTable data={resolvedData} onDelete={handleDeleteIncident} onToggleSLA={handleToggleSLAResolved} onSave={handleSaveResolved} />
           )}
 
           {/* ── Panel Reincidencias ───────────────────────────────────────── */}
