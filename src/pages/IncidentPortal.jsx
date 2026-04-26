@@ -121,6 +121,14 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
   const [saving, setSaving] = useState(false)
   const [dirty, setDirty] = useState(false)
 
+  useEffect(() => {
+    if (!dirty) {
+      setWs(inc.workStatus || 'active')
+      setClaim(inc.claimNumber || '')
+      setNotes(inc.resolutionNotes || '')
+    }
+  }, [inc.workStatus, inc.claimNumber, inc.resolutionNotes])
+
   const handleWsChange = v => { setWs(v); setDirty(true) }
   const handleClaimChange = v => { setClaim(v); setDirty(true) }
   const handleNotesChange = v => { setNotes(v); setDirty(true) }
