@@ -657,3 +657,17 @@ export const deleteIncident = async (id) => {
     return false
   }
 }
+
+// GET /api/incidents/sla-report?month=2026-04&orgId=X
+export const getSlaReport = async (month = null, orgId = null) => {
+  try {
+    const params = new URLSearchParams()
+    if (month)  params.append('month',  month)
+    if (orgId)  params.append('orgId',  orgId)
+    const resp = await axiosInstance.get(`/incidents/sla-report?${params}`)
+    return resp.data?.ok ? resp.data : null
+  } catch (error) {
+    console.error('getSlaReport error:', error.message)
+    return null
+  }
+}
