@@ -444,13 +444,144 @@ function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncid
   )
 }
 
+// ── Fila editable del reporte de resueltos ────────────────────────────────────
+function ResolvedRow({ r, onDelete, onToggleSLA, onSaveNotes }) {
+  const [notes, setNotes]   = useState(r.resolutionNotes || '')
+  const [dirty, setDirty]   = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  const handleSave = async () => {
+    setSaving(true)
+    const ok = await onSaveNotes(r._id, notes)
+    if (ok !== false) setDirty(false)
+    setSaving(false)
+  }
+
+  return (
+    <tr style={r.isDuplicateInGroup ? { opacity: 0.6 } : {}}>
+      <td><span className="inc__badge inc__badge--type">{r.incidentType}</span></td>
+      <td className="inc__td-mono">{r.networkName || r.networkId || '—'}</td>
+      <td className="inc__td-mono">{r.deviceSerial || '—'}</td>
+      <td className="inc__td-mono">{fmtDate(r.detectedAt)}</td>
+      <td className="inc__td-mono">
+        {r.effectiveResolvedAt ? fmtDate(r.effectiveResolvedAt) : '—'}
+      </td>
+      <td>
+        {r.isDuplicateInGroup
+          ? <span style={{ fontSize: '0.68rem', color: '#64748b', fontStyle: 'italic' }}
+              title="Mismo equipo y claim — downtime ya contabilizado en el vínculo principal">
+              ↳ mismo equipo
+            </span>
+          : r.countsSLA
+            ? <span
+                className="inc__badge"
+                style={{
+                  background: r.downtimeMinutes > 60 ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
+                  color:      r.downtimeMinutes > 60 ? COLOR_ERROR : COLOR_WARNING,
+                  border:     `1px solid ${r.downtimeMinutes > 60 ? COLOR_ERROR : COLOR_WARNING}44`
+                }}
+              >
+                {r.downtimeHuman}
+              </span>
+            : <span style={{ color: COLOR_MUTED, fontSize: '0.72rem' }}>—</span>
+        }
+      </td>
+      <td style={{ textAlign: 'center' }}>
+        <button
+          title={r.countsSLA ? 'Cuenta SLA — click para desactivar' : 'No cuenta SLA — click para activar'}
+          onClick={() => onToggleSLA?.(r._id, !r.countsSLA)}
+          style={{
+            fontSize: '0.7rem', fontWeight: 700,
+            padding: '0.15rem 0.45rem', borderRadius: 4,
+            cursor: 'pointer', border: '1px solid',
+            transition: 'all 0.15s',
+            background:   r.countsSLA ? 'rgba(239,68,68,0.15)' : 'rgba(100,116,139,0.1)',
+            color:        r.countsSLA ? '#ef4444' : '#475569',
+            borderColor:  r.countsSLA ? '#ef444444' : '#47556933',
+          }}
+        >
+          {r.countsSLA ? 'SLA' : '—'}
+        </button>
+      </td>
+      <td style={{ textAlign: 'center' }}>
+        {(() => {
+          if (r.isDuplicateInGroup || !r.downtimeMinutes || !r.countsSLA)
+            return <span style={{ color: '#475569', fontSize: '0.68rem' }}>—</span>
+          const now = new Date()
+          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+          const periodMin = Math.round((now - monthStart) / 60000)
+          const unavailPct = ((r.downtimeMinutes / periodMin) * 100).toFixed(2)
+          const ok = r.downtimeMinutes <= 480
+          return (
+            <span
+              title={`${r.downtimeHuman} sobre ${Math.round(periodMin/60/24)} días del mes → ${unavailPct}% indisponibilidad${ok ? '' : ' — incumple MTTR contractual (8hs)'}`}
+              style={{ fontSize: '0.72rem', fontWeight: 700, color: ok ? '#10b981' : '#ef4444' }}
+            >
+              {ok ? '✔' : `${unavailPct}%`}
+            </span>
+          )
+        })()}
+      </td>
+      <td className="inc__td-mono">{r.claimNumber || '—'}</td>
+      <td style={{ minWidth: 180 }}>
+        <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
+          <input
+            value={notes}
+            onChange={e => { setNotes(e.target.value); setDirty(true) }}
+            placeholder="Notas…"
+            style={{
+              flex: 1, fontSize: '0.72rem', padding: '0.2rem 0.4rem',
+              background: '#1e293b', color: '#e2e8f0',
+              border: `1px solid ${dirty ? '#3b82f6' : '#334155'}`,
+              borderRadius: 4, outline: 'none', minWidth: 0,
+            }}
+          />
+          {dirty && (
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              title="Guardar nota"
+              style={{
+                fontSize: '0.65rem', fontWeight: 700, padding: '0.2rem 0.5rem',
+                borderRadius: 4, cursor: saving ? 'default' : 'pointer',
+                border: '1px solid #3b82f644',
+                background: saving ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.18)',
+                color: '#60a5fa', whiteSpace: 'nowrap',
+              }}
+            >
+              {saving ? '…' : 'Guardar'}
+            </button>
+          )}
+        </div>
+      </td>
+      <td style={{ textAlign: 'center', padding: '0 0.4rem' }}>
+        <button
+          title="Eliminar registro"
+          onClick={() => onDelete?.(r._id, r)}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: '#475569', padding: '0.2rem',
+            lineHeight: 1, fontSize: '0.9rem',
+            transition: 'color 0.15s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+          onMouseLeave={e => e.currentTarget.style.color = '#475569'}
+        >
+          🗑
+        </button>
+      </td>
+    </tr>
+  )
+}
+
 // ── Tabla reporte resueltos ───────────────────────────────────────────────────
-function ResolvedReportTable({ data, onDelete, onToggleSLA }) {
+function ResolvedReportTable({ data, onDelete, onToggleSLA, onSaveNotes }) {
   if (!data) return null
   const { incidents } = data
 
-  // Solo incidentes cerrados manualmente — los auto-recuperados van a Reincidencias
-  const manualIncidents = incidents.filter(r => !r.resolvedAt)
+  // Incidentes donde el operador intervino (manualResolvedAt set).
+  // Pueden tener también resolvedAt (cron auto-recovery + operador cerró el ticket).
+  const manualIncidents = incidents.filter(r => !!r.manualResolvedAt)
 
   // Eventos primarios: excluir duplicados del mismo equipo/claim
   const primaryIncidents = manualIncidents.filter(r => !r.isDuplicateInGroup)
@@ -492,93 +623,19 @@ function ResolvedReportTable({ data, onDelete, onToggleSLA }) {
                   <th title="¿Este incidente acumula tiempo de SLA?">SLA</th>
                   <th title="MTTR contractual: 8hs">MTTR</th>
                   <th>Claim #</th>
+                  <th>Notas</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
                 {manualIncidents.map((r, i) => (
-                  <tr key={r._id || i} style={r.isDuplicateInGroup ? { opacity: 0.6 } : {}}>
-                    <td><span className="inc__badge inc__badge--type">{r.incidentType}</span></td>
-                    <td className="inc__td-mono">{r.networkName || r.networkId || '—'}</td>
-                    <td className="inc__td-mono">{r.deviceSerial || '—'}</td>
-                    <td className="inc__td-mono">{fmtDate(r.detectedAt)}</td>
-                    <td className="inc__td-mono">
-                      {r.effectiveResolvedAt ? fmtDate(r.effectiveResolvedAt) : '—'}
-                    </td>
-                    <td>
-                      {r.isDuplicateInGroup
-                        ? <span style={{ fontSize: '0.68rem', color: '#64748b', fontStyle: 'italic' }}
-                            title="Mismo equipo y claim — downtime ya contabilizado en el vínculo principal">
-                            ↳ mismo equipo
-                          </span>
-                        : r.countsSLA
-                          ? <span
-                              className="inc__badge"
-                              style={{
-                                background: r.downtimeMinutes > 60 ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
-                                color:      r.downtimeMinutes > 60 ? COLOR_ERROR : COLOR_WARNING,
-                                border:     `1px solid ${r.downtimeMinutes > 60 ? COLOR_ERROR : COLOR_WARNING}44`
-                              }}
-                            >
-                              {r.downtimeHuman}
-                            </span>
-                          : <span style={{ color: COLOR_MUTED, fontSize: '0.72rem' }}>—</span>
-                      }
-                    </td>
-                    <td style={{ textAlign: 'center' }}>
-                      <button
-                        title={r.countsSLA ? 'Cuenta SLA — click para desactivar' : 'No cuenta SLA — click para activar'}
-                        onClick={() => onToggleSLA?.(r._id, !r.countsSLA)}
-                        style={{
-                          fontSize: '0.7rem', fontWeight: 700,
-                          padding: '0.15rem 0.45rem', borderRadius: 4,
-                          cursor: 'pointer', border: '1px solid',
-                          transition: 'all 0.15s',
-                          background:   r.countsSLA ? 'rgba(239,68,68,0.15)' : 'rgba(100,116,139,0.1)',
-                          color:        r.countsSLA ? '#ef4444' : '#475569',
-                          borderColor:  r.countsSLA ? '#ef444444' : '#47556933',
-                        }}
-                      >
-                        {r.countsSLA ? 'SLA' : '—'}
-                      </button>
-                    </td>
-                    <td style={{ textAlign: 'center' }}>
-                      {(() => {
-                        if (r.isDuplicateInGroup || !r.downtimeMinutes || !r.countsSLA)
-                          return <span style={{ color: '#475569', fontSize: '0.68rem' }}>—</span>
-                        const now = new Date()
-                        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-                        const periodMin = Math.round((now - monthStart) / 60000)
-                        const unavailPct = ((r.downtimeMinutes / periodMin) * 100).toFixed(2)
-                        const ok = r.downtimeMinutes <= 480
-                        return (
-                          <span
-                            title={`${r.downtimeHuman} sobre ${Math.round(periodMin/60/24)} días del mes → ${unavailPct}% indisponibilidad${ok ? '' : ' — incumple MTTR contractual (8hs)'}`}
-                            style={{ fontSize: '0.72rem', fontWeight: 700, color: ok ? '#10b981' : '#ef4444' }}
-                          >
-                            {ok ? '✔' : `${unavailPct}%`}
-                          </span>
-                        )
-                      })()}
-                    </td>
-                    <td className="inc__td-mono">{r.claimNumber || '—'}</td>
-                    <td style={{ textAlign: 'center', padding: '0 0.4rem' }}>
-                      <button
-                        title="Eliminar registro"
-                        onClick={() => onDelete?.(r._id, r)}
-                        style={{
-                          background: 'none', border: 'none', cursor: 'pointer',
-                          color: '#475569', padding: '0.2rem',
-                          lineHeight: 1, fontSize: '0.9rem',
-                          transition: 'color 0.15s',
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
-                        onMouseLeave={e => e.currentTarget.style.color = '#475569'}
-                      >
-                        🗑
-                      </button>
-                    </td>
-                  </tr>
+                  <ResolvedRow
+                    key={r._id || i}
+                    r={r}
+                    onDelete={onDelete}
+                    onToggleSLA={onToggleSLA}
+                    onSaveNotes={onSaveNotes}
+                  />
                 ))}
               </tbody>
             </table>
@@ -832,8 +889,8 @@ function SlaReportTable({ selectedOrg }) {
                                     <tr style={{ color: '#64748b' }}>
                                       <th style={TD}>Claim #</th>
                                       <th style={TD}>WAN</th>
-                                      <th style={TD}>Inicio caída</th>
-                                      <th style={TD}>Resolución</th>
+                                      <th style={TD}>Link Down</th>
+                                      <th style={TD}>Link Up</th>
                                       <th style={TD}>Duración</th>
                                       <th style={TD}>Notas</th>
                                     </tr>
@@ -1188,6 +1245,21 @@ useEffect(() => {
     })
   }, [])
 
+  const handleSaveResolvedNotes = useCallback(async (id, resolutionNotes) => {
+    const updated = await updateIncidentWorkStatus(id, { resolutionNotes })
+    if (!updated) return false
+    setResolvedData(prev => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        incidents: prev.incidents.map(i =>
+          String(i._id) === String(id) ? { ...i, resolutionNotes } : i
+        ),
+      }
+    })
+    return true
+  }, [])
+
   const handleDeleteIncident = useCallback(async (id, inc) => {
     const label = inc?.deviceSerial || id
     if (!window.confirm(`¿Eliminar el registro "${label}" de la base de datos? Esta acción no se puede deshacer.`)) return
@@ -1410,7 +1482,7 @@ useEffect(() => {
           {activeTab === 'resolved' && (
             loadingResolved
               ? <div className="inc__loading"><span className="inc__spinner" /> Loading resolved report…</div>
-              : <ResolvedReportTable data={resolvedData} onDelete={handleDeleteIncident} onToggleSLA={handleToggleSLAResolved} />
+              : <ResolvedReportTable data={resolvedData} onDelete={handleDeleteIncident} onToggleSLA={handleToggleSLAResolved} onSaveNotes={handleSaveResolvedNotes} />
           )}
 
           {/* ── Panel Reincidencias ───────────────────────────────────────── */}
