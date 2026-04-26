@@ -3,7 +3,7 @@ import axios from "axios";
 const isProduction = import.meta.env.VITE_PRODUCTION === 'true';
 const subFolder = import.meta.env.VITE_BASE;
 const baseURL = isProduction ? `http://consultasnoc.int.fibercorp.com.ar/help2/${subFolder}/api` : 'http://localhost:4000/api';
-const locationHREF = isProduction ? `/help2/${subFolder}/login` : '/login';
+const locationHREF = isProduction ? `/help2/${subFolder}/` : '/';
 
 const axiosInstance = axios.create({
   //baseURL: "http://localhost:4000/api"
@@ -24,10 +24,12 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      const hadToken = !!localStorage.getItem('jwt_token');
       localStorage.removeItem('jwt_token');
-      localStorage.setItem('logout_reason', 'expirado');
-      window.location.href = `${locationHREF}`;
-      
+      if (hadToken) {
+        localStorage.setItem('logout_reason', 'expirado');
+        window.location.href = `${locationHREF}`;
+      }
     }
     return Promise.reject(error);
   }
