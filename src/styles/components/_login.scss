@@ -103,12 +103,51 @@
 .login-wrapper {
   display: flex;
   flex-direction: column;
-  justify-content: center; /* vertical */
-  align-items: center;     /* horizontal */
-  height: 100vh;           /* ocupa toda la pantalla */
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  gap: 1.5rem;
+}
+
+.login-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.login-logo {
+  height: 48px;
+  width: auto;
+}
+
+.login-sdwan {
+  color: $color-text-muted;
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-family: $font-mono;
+}
+
+.login-cisco {
+  height: 26px;
+  width: auto;
+  filter: brightness(0) invert(1);
+  opacity: 0.6;
+}
+
+.login-error {
+  color: $color-error;
+  font-size: 0.8rem;
+  font-family: $font-mono;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  background: $color-error-dim;
+  border-left: 3px solid $color-error;
+  border-radius: $radius-sm;
 }
 
 .logo {
   margin-bottom: 5px;
-  width: 120px; /* opcional */
+  width: 120px;
 }
