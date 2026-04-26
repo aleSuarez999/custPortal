@@ -3,10 +3,8 @@ import { NavLink } from 'react-router'
 import Box from '../components/Box'
 import { jwtDecode } from "jwt-decode"
 import logo from "../assets/logo.webp";
-import { useNavigate } from 'react-router';
 
 function Navbar() {
-    const navigate = useNavigate();
     let username = "";
     let role = ""; 
 
@@ -51,10 +49,10 @@ function Navbar() {
                     </Box>     
                 </NavLink>
                 <NavLink onClick={() => {
+                    const prod = import.meta.env.VITE_PRODUCTION === 'true';
+                    const base = import.meta.env.VITE_BASE;
                     localStorage.removeItem('jwt_token');
-                    localStorage.setItem('logout_reason', 'manual');
-                   // window.location.href = '/login'
-                     navigate('/login');  // ← sin recarga de página
+                    window.location.href = prod ? `/help2/${base}/` : '/';
                 }}>
 
                     <Text as="span" style={{ fontSize: '0.9rem', color: '#fff'}}>Logout</Text>
