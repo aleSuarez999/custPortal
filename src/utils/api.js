@@ -458,9 +458,9 @@ export const toggleIncidentSLA = async (id, countsSLA) => {
 }
 
 // PATCH /api/incidents/bulk-claim → asignar mismo claim a varios incidentes
-export const bulkAssignClaim = async (ids, claimNumber, workStatus) => {
+export const bulkAssignClaim = async (ids, claimNumber, workStatus, resolutionNotes = '') => {
     try {
-        const resp = await axiosInstance.patch('/incidents/bulk-claim', { ids, claimNumber, workStatus })
+        const resp = await axiosInstance.patch('/incidents/bulk-claim', { ids, claimNumber, workStatus, resolutionNotes })
         return resp.data.ok ? resp.data.modified : null
     } catch (error) {
         console.error('bulkAssignClaim error:', error.message)

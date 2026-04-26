@@ -361,6 +361,7 @@ function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncid
   const [selected, setSelected] = useState([])
   const [bulkClaim, setBulkClaim] = useState('')
   const [bulkStatus, setBulkStatus] = useState('in_progress')
+  const [bulkNotes, setBulkNotes] = useState('')
   const [saving, setSaving] = useState(false)
 
   const toggleSelect = (id) =>
@@ -372,10 +373,11 @@ function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncid
   const handleBulkSave = async () => {
     if (!bulkClaim.trim() || selected.length === 0) return
     setSaving(true)
-    const modified = await onBulkClaim(selected, bulkClaim.trim(), bulkStatus)
+    const modified = await onBulkClaim(selected, bulkClaim.trim(), bulkStatus, bulkNotes.trim())
     if (modified !== null) {
       setSelected([])
       setBulkClaim('')
+      setBulkNotes('')
     }
     setSaving(false)
   }
@@ -402,6 +404,14 @@ function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncid
             value={bulkClaim}
             onChange={e => setBulkClaim(e.target.value)}
             style={{ minWidth: 140 }}
+          />
+          <input
+            className="inc__claim-input"
+            type="text"
+            placeholder="Nota (opcional)"
+            value={bulkNotes}
+            onChange={e => setBulkNotes(e.target.value)}
+            style={{ minWidth: 200 }}
           />
           <select
             className="inc__ws-select"
@@ -1281,15 +1291,15 @@ useEffect(() => {
     })
   }, [])
 
-  const handleBulkClaim = useCallback(async (ids, claimNumber, workStatus) => {
-    const modified = await bulkAssignClaim(ids, claimNumber, workStatus)
+  const handleBulkClaim = useCallback(async (ids, claimNumber, workStatus, resolutionNotes = '') => {
+    const modified = await bulkAssignClaim(ids, claimNumber, workStatus, resolutionNotes)
     if (modified === null) return null
 
     setData(prev => {
       if (!prev) return prev
       const updatedOpen = prev.recentOpen.map(i =>
         ids.includes(i._id)
-          ? { ...i, claimNumber, workStatus: workStatus ?? i.workStatus }
+          ? { ...i, claimNumber, workStatus: workStatus ?? i.workStatus, resolutionNotes: resolutionNotes || i.resolutionNotes }
           : i
       ).filter(i => workStatus !== 'resolved' || !ids.includes(i._id))
 
