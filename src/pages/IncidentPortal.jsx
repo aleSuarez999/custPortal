@@ -11,6 +11,7 @@ import {
   toggleIncidentSLA,
   getResolvedIncidentsReport, getIncidentNetworkDetail,
   deleteIncident,
+  reopenIncident,
   getRecurrenceReport,
   getSlaReport,
 } from '../utils/api'
@@ -495,7 +496,7 @@ function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncid
 }
 
 // ── Fila editable del reporte de resueltos ────────────────────────────────────
-function ResolvedRow({ r, onDelete, onToggleSLA, onSave }) {
+function ResolvedRow({ r, onDelete, onToggleSLA, onSave, onReopen }) {
   const [notes, setNotes]           = useState(r.resolutionNotes || '')
   const [detectedAt, setDetectedAt] = useState(r.detectedAt || null)
   const [resolvedAt, setResolvedAt] = useState(r.resolvedAt || null)
@@ -650,6 +651,20 @@ function ResolvedRow({ r, onDelete, onToggleSLA, onSave }) {
       </td>
       <td style={{ textAlign: 'center', padding: '0 0.4rem' }}>
         <button
+          title="Reabrir — pasar a In Progress"
+          onClick={() => onReopen?.(r._id)}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: '#475569', padding: '0.2rem 0.35rem',
+            lineHeight: 1, fontSize: '0.85rem',
+            transition: 'color 0.15s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.color = '#f59e0b'}
+          onMouseLeave={e => e.currentTarget.style.color = '#475569'}
+        >
+          ↩
+        </button>
+        <button
           title="Eliminar registro"
           onClick={() => onDelete?.(r._id, r)}
           style={{
@@ -669,7 +684,7 @@ function ResolvedRow({ r, onDelete, onToggleSLA, onSave }) {
 }
 
 // ── Tabla reporte resueltos ───────────────────────────────────────────────────
-function ResolvedReportTable({ data, onDelete, onToggleSLA, onSave }) {
+function ResolvedReportTable({ data, onDelete, onToggleSLA, onSave, onReopen }) {
   if (!data) return null
   const { incidents } = data
 
@@ -729,6 +744,7 @@ function ResolvedReportTable({ data, onDelete, onToggleSLA, onSave }) {
                     onDelete={onDelete}
                     onToggleSLA={onToggleSLA}
                     onSave={onSave}
+                    onReopen={onReopen}
                   />
                 ))}
               </tbody>
@@ -1359,6 +1375,23 @@ useEffect(() => {
     return true
   }, [])
 
+  const handleReopenIncident = useCallback(async (id) => {
+    const incident = await reopenIncident(id)
+    if (!incident) return
+    setResolvedData(prev => {
+      if (!prev) return prev
+      return { ...prev, incidents: prev.incidents.filter(i => String(i._id) !== String(id)) }
+    })
+    setData(prev => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        recentOpen: [incident, ...prev.recentOpen],
+        kpis: { ...prev.kpis, openIncidents: (prev.kpis.openIncidents || 0) + 1 },
+      }
+    })
+  }, [])
+
   const handleDeleteIncident = useCallback(async (id, inc) => {
     const label = inc?.deviceSerial || id
     if (!window.confirm(`¿Eliminar el registro "${label}" de la base de datos? Esta acción no se puede deshacer.`)) return
@@ -1581,7 +1614,7 @@ useEffect(() => {
           {activeTab === 'resolved' && (
             loadingResolved
               ? <div className="inc__loading"><span className="inc__spinner" /> Loading resolved report…</div>
-              : <ResolvedReportTable data={resolvedData} onDelete={handleDeleteIncident} onToggleSLA={handleToggleSLAResolved} onSave={handleSaveResolved} />
+              : <ResolvedReportTable data={resolvedData} onDelete={handleDeleteIncident} onToggleSLA={handleToggleSLAResolved} onSave={handleSaveResolved} onReopen={handleReopenIncident} />
           )}
 
           {/* ── Panel Reincidencias ───────────────────────────────────────── */}

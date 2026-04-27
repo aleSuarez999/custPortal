@@ -650,6 +650,16 @@ export const getMgSims = async (serial) => {
   }
 }
 
+
+export const reopenIncident = async (id) => {
+  try {
+    const resp = await axiosInstance.patch(`/incidents/${id}/reopen`)
+    return resp.data?.ok ? resp.data.incident : null
+  } catch (error) {
+    console.error('reopenIncident error:', error.message)
+    return null
+  }
+}
 export const deleteIncident = async (id) => {
   try {
     const resp = await axiosInstance.delete(`/incidents/${id}`)
