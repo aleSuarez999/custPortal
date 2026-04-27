@@ -24,7 +24,7 @@ function Navbar() {
 
   return (
        <Box className="navbar__container" >
-             <img src={logo} alt="logo" className="login-logo"/>
+             <img src={logo} alt="logo" className="dashboard-logo"/>
 
 
             <NavLink to="/" >
