@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import api from '../utils/api'
 import { useNavigate } from 'react-router-dom'
-import logo from '../assets/logo.webp'
+import logo from '../assets/personal-tech-logo-blanco.svg'
+//import logo from '../assets/logo.webp'
 import ciscoLogo from '../assets/cisco.svg'
 
 export default function Login() {
