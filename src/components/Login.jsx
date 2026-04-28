@@ -39,9 +39,9 @@ export default function Login() {
       <div className="login-brand">
         <img src={logo} alt="logo" className="login-logo" />
         <span className="login-sdwan">SD-WAN</span>
-        <div className='d-flex'>
+        <div className='d-flex align-center'>
         <img src={ciscoLogo} alt="Cisco Meraki" className="login-cisco pr-2" />
-        <div class="mds-header-branding-name pl-2"><a href="https://n356.dashboard.meraki.com/o/3Dn5zb/manage/dashboard">Meraki</a></div>
+        <div className="mds-header-branding-name pl-2"><a href="https://n356.dashboard.meraki.com/o/3Dn5zb/manage/dashboard">Meraki</a></div>
         </div>
       </div>
 
