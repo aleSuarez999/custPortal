@@ -41,7 +41,7 @@ const WORK_STATUS_CFG = {
 }
 
 const TYPE_COLORS  = [COLOR_ACCENT, COLOR_SECONDARY, COLOR_SUCCESS, COLOR_WARNING, COLOR_ERROR, '#8b5cf6', '#ec4899']
-const PERIOD_OPTIONS = [7, 14, 30, 60, 90]
+const PERIOD_OPTIONS = [1, 7, 14, 30, 60, 90]
 const LS_ORG_KEY     = 'inc_mgmnt_last_org'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -372,12 +372,15 @@ function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncid
   const [bulkStatus, setBulkStatus] = useState('in_progress')
   const [bulkNotes, setBulkNotes] = useState('')
   const [saving, setSaving] = useState(false)
+  const [filterStatus, setFilterStatus] = useState('all')
 
   const toggleSelect = (id) =>
     setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
 
+  const filteredRows = filterStatus === 'all' ? rows : rows.filter(r => r.workStatus === filterStatus)
+
   const toggleAll = () =>
-    setSelected(prev => prev.length === rows.length ? [] : rows.map(r => r._id))
+    setSelected(prev => prev.length === filteredRows.length ? [] : filteredRows.map(r => r._id))
 
   const handleBulkSave = async () => {
     if (!bulkClaim.trim() || selected.length === 0) return
@@ -394,8 +397,47 @@ function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncid
   if (!rows || rows.length === 0)
     return <p className="inc__empty">No open incidents for this organization</p>
 
+  const STATUS_FILTERS = [
+    { key: 'all',         label: 'All' },
+    { key: 'active',      label: 'Active' },
+    { key: 'in_progress', label: 'In Progress' },
+    { key: 'suspended',   label: 'Suspended' },
+  ]
+
   return (
     <>
+      {/* ── Filtro por status ──────────────────────────────────────────── */}
+      <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.6rem', flexWrap: 'wrap' }}>
+        {STATUS_FILTERS.map(f => {
+          const active = filterStatus === f.key
+          const cfg = WORK_STATUS_CFG[f.key]
+          return (
+            <button
+              key={f.key}
+              onClick={() => { setFilterStatus(f.key); setSelected([]) }}
+              style={{
+                padding: '0.2rem 0.75rem',
+                borderRadius: 20,
+                border: `1px solid ${active ? (cfg?.color ?? COLOR_ACCENT) : 'rgba(255,255,255,0.12)'}`,
+                background: active ? (cfg?.bg ?? 'rgba(0,212,255,0.12)') : 'transparent',
+                color: active ? (cfg?.color ?? COLOR_ACCENT) : COLOR_MUTED,
+                cursor: 'pointer',
+                fontSize: '0.78rem',
+                fontWeight: active ? 600 : 400,
+                transition: 'all 0.15s',
+              }}
+            >
+              {f.label}
+              {f.key !== 'all' && (
+                <span style={{ marginLeft: '0.35rem', opacity: 0.7 }}>
+                  ({rows.filter(r => r.workStatus === f.key).length})
+                </span>
+              )}
+            </button>
+          )
+        })}
+      </div>
+
       {/* ── Panel bulk-claim (solo visible cuando hay selección) ── */}
       {selected.length > 0 && (
         <div style={{
@@ -457,7 +499,7 @@ function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncid
               <th style={{ width: 32 }}>
                 <input
                   type="checkbox"
-                  checked={selected.length === rows.length && rows.length > 0}
+                  checked={selected.length === filteredRows.length && filteredRows.length > 0}
                   onChange={toggleAll}
                   style={{ cursor: 'pointer', accentColor: COLOR_ACCENT }}
                 />
@@ -476,7 +518,9 @@ function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncid
             </tr>
           </thead>
           <tbody>
-            {rows.map(r => (
+            {filteredRows.length === 0
+              ? <tr><td colSpan={12} style={{ textAlign: 'center', color: COLOR_MUTED, padding: '1.5rem 0', fontSize: '0.85rem' }}>Sin incidentes con estado "{STATUS_FILTERS.find(f => f.key === filterStatus)?.label}"</td></tr>
+              : filteredRows.map(r => (
               <OpenIncidentRow
                 key={r._id}
                 inc={r}
@@ -1584,9 +1628,6 @@ useEffect(() => {
               <Text as="h3" className="inc__panel-title">
                 Open Incidents — {orgName}
               </Text>
-              <p className="inc__table-hint">
-                Ordená por estado: <strong style={{color: COLOR_ERROR}}>Active</strong> primero, luego <strong style={{color: COLOR_WARNING}}>In Progress</strong>. Al marcar como <strong style={{color: COLOR_SUCCESS}}>Resolved</strong> el incidente se guarda con timestamp y pasa al reporte histórico.
-              </p>
               <OpenIncidentsTable
                 rows={[...data.recentOpen].sort((a, b) => {
                   const aUp = a.workStatus === 'suspended' && (a.recurrenceCount ?? 0) > 0
