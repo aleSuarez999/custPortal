@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { useTheme } from '../hooks/useTheme'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend
@@ -367,6 +368,7 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
 
 // ── Tabla incidentes abiertos ─────────────────────────────────────────────────
 function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncident, orgs, showOrg }) {
+  const { theme: _theme } = useTheme()
   const [selected, setSelected] = useState([])
   const [bulkClaim, setBulkClaim] = useState('')
   const [bulkStatus, setBulkStatus] = useState('in_progress')
@@ -418,7 +420,7 @@ function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncid
               style={{
                 padding: '0.2rem 0.75rem',
                 borderRadius: 20,
-                border: `1px solid ${active ? (cfg?.color ?? COLOR_ACCENT) : 'rgba(255,255,255,0.12)'}`,
+                border: `1px solid ${active ? (cfg?.color ?? COLOR_ACCENT) : (_theme === 'light' ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.12)')}`,
                 background: active ? (cfg?.bg ?? 'rgba(0,212,255,0.12)') : 'transparent',
                 color: active ? (cfg?.color ?? COLOR_ACCENT) : COLOR_MUTED,
                 cursor: 'pointer',
@@ -1122,6 +1124,14 @@ function OrgSelector({ orgs, value, onChange }) {
 
 // ── Página principal ──────────────────────────────────────────────────────────
 export default function IncidentManagement() {
+  const { theme, toggle } = useTheme()
+  const C_ACCENT    = theme === 'light' ? '#1d6fda' : '#00d4ff'
+  const C_SUCCESS   = theme === 'light' ? '#059669' : '#10b981'
+  const C_WARNING   = theme === 'light' ? '#d97706' : '#f59e0b'
+  const C_ERROR     = theme === 'light' ? '#dc2626' : '#ef4444'
+  const C_SECONDARY = theme === 'light' ? '#6d28d9' : '#3b82f6'
+  const C_TYPE_COLORS = [C_ACCENT, C_SECONDARY, C_SUCCESS, C_WARNING, C_ERROR, '#8b5cf6', '#ec4899']
+
   const [orgs, setOrgs]               = useState([])
   const [selectedOrg, setSelectedOrg] = useState('')
   const [data, setData]               = useState(null)
@@ -1479,6 +1489,27 @@ useEffect(() => {
               </button>
             ))}
           </div>
+          {/* ── Theme toggle ─────────────────────────────── */}
+          <button
+            onClick={toggle}
+            title={theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+              padding: '0.22rem 0.75rem',
+              borderRadius: 20,
+              border: `1px solid ${theme === 'light' ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.15)'}`,
+              background: theme === 'light' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)',
+              color: theme === 'light' ? '#334155' : '#94a3b8',
+              cursor: 'pointer',
+              fontSize: '0.72rem',
+              fontFamily: 'inherit',
+              letterSpacing: '0.04em',
+              transition: 'all 0.2s',
+              alignSelf: 'flex-end',
+            }}
+          >
+            {theme === 'dark' ? '☀ Light' : '◑ Dark'}
+          </button>
         </div>
       </div>
 
@@ -1486,7 +1517,7 @@ useEffect(() => {
       {loading && (
         <div className="inc__loading">
           <span className="inc__spinner" />
-          Loading incident data for <strong style={{ color: COLOR_ACCENT, marginLeft: '0.3rem' }}>{orgName}</strong>…
+          Loading incident data for <strong style={{ color: C_ACCENT, marginLeft: '0.3rem' }}>{orgName}</strong>…
         </div>
       )}
       {error && <div className="inc__error">{error}</div>}
@@ -1514,9 +1545,9 @@ useEffect(() => {
                   <YAxis tick={{ fill: COLOR_MUTED, fontSize: 10 }} allowDecimals={false} />
                   <Tooltip content={<ChartTooltip />} />
                   <Legend wrapperStyle={{ fontSize: '0.75rem', color: COLOR_MUTED }} />
-                  <Line type="monotone" dataKey="total"    stroke={COLOR_ACCENT}  strokeWidth={2}   dot={false} name="Total" />
-                  <Line type="monotone" dataKey="resolved" stroke={COLOR_SUCCESS} strokeWidth={1.5} dot={false} name="Resolved" />
-                  <Line type="monotone" dataKey="open"     stroke={COLOR_ERROR}   strokeWidth={1.5} dot={false} name="Open" />
+                  <Line type="monotone" dataKey="total"    stroke={C_ACCENT}  strokeWidth={2}   dot={false} name="Total" />
+                  <Line type="monotone" dataKey="resolved" stroke={C_SUCCESS} strokeWidth={1.5} dot={false} name="Resolved" />
+                  <Line type="monotone" dataKey="open"     stroke={C_ERROR}   strokeWidth={1.5} dot={false} name="Open" />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -1533,7 +1564,7 @@ useEffect(() => {
                         label={({ name, percent }) => `${name.replace('_', ' ')} ${(percent * 100).toFixed(0)}%`}
                         labelLine={{ stroke: COLOR_MUTED }}
                       >
-                        {data.byType.map((_, i) => <Cell key={i} fill={TYPE_COLORS[i % TYPE_COLORS.length]} />)}
+                        {data.byType.map((_, i) => <Cell key={i} fill={C_TYPE_COLORS[i % C_TYPE_COLORS.length]} />)}
                       </Pie>
                       <Tooltip content={<ChartTooltip />} />
                     </PieChart>
@@ -1583,7 +1614,7 @@ useEffect(() => {
                         tickFormatter={v => v.length > 22 ? v.slice(0, 22) + '…' : v}
                       />
                       <Tooltip content={<ChartTooltip />} />
-                      <Bar dataKey="count" name="Incidents" fill={COLOR_SECONDARY} radius={[0, 4, 4, 0]} />
+                      <Bar dataKey="count" name="Incidents" fill={C_SECONDARY} radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 )

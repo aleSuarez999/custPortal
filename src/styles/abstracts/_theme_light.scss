@@ -1,0 +1,194 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// LIGHT TECH THEME — overrides activos cuando <html data-theme="light">
+// Paleta: fondos frios blanco/gris-azul, acento azul electrico, tipografia oscura
+// ═══════════════════════════════════════════════════════════════════════════════
+
+$lt-bg-deep:       #eef2f7;
+$lt-bg-surface:    #f8fafc;
+$lt-bg-card:       #ffffff;
+$lt-bg-elevated:   #e9eef6;
+$lt-accent:        #1d6fda;
+$lt-accent-dim:    rgba(29, 111, 218, 0.10);
+$lt-accent-glow:   rgba(29, 111, 218, 0.22);
+$lt-success:       #059669;
+$lt-warning:       #d97706;
+$lt-error:         #dc2626;
+$lt-text:          #0f172a;
+$lt-text-muted:    #64748b;
+$lt-text-header:   #334155;
+$lt-border:        rgba(0, 0, 0, 0.08);
+$lt-border-accent: rgba(29, 111, 218, 0.28);
+$lt-shadow:        0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.05);
+$lt-shadow-hover:  0 2px 8px rgba(29,111,218,0.12), 0 4px 20px rgba(0,0,0,0.08);
+
+[data-theme="light"] {
+
+  // -- Base ------------------------------------------------------------------
+  body, #root {
+    background-color: $lt-bg-deep;
+    color: $lt-text;
+  }
+
+  .main-content {
+    background-color: $lt-bg-deep;
+    color: $lt-text;
+  }
+
+  // -- Inc dashboard ---------------------------------------------------------
+  .inc__dashboard { color: $lt-text; }
+  .inc__header { border-bottom-color: $lt-border; }
+  .inc__title { color: $lt-accent; text-shadow: none; }
+  .inc__subtitle { color: $lt-text-muted; }
+
+  // -- Org selector ----------------------------------------------------------
+  .inc__org-select {
+    background: $lt-bg-card;
+    border-color: $lt-border-accent;
+    color: $lt-accent;
+    option { background: $lt-bg-surface; color: $lt-text; }
+    &:focus { box-shadow: 0 0 0 2px $lt-accent-glow; border-color: $lt-accent; }
+  }
+
+  // -- Period selector -------------------------------------------------------
+  .inc__period-label { color: $lt-text-muted; }
+
+  .inc__period-btn {
+    background: $lt-bg-card;
+    border-color: $lt-border;
+    color: $lt-text-muted;
+    &:hover { background: $lt-accent-dim; color: $lt-accent; border-color: $lt-border-accent; }
+    &.inc__period-btn--active { background: $lt-accent-dim; color: $lt-accent; border-color: $lt-border-accent; }
+  }
+
+  // -- Spinner ---------------------------------------------------------------
+  .inc__spinner { border-color: $lt-border; border-top-color: $lt-accent; }
+  .inc__empty { color: $lt-text-muted; }
+
+  // -- KPI cards -------------------------------------------------------------
+  .inc__kpi-card {
+    background: $lt-bg-card;
+    border-color: $lt-border;
+    box-shadow: $lt-shadow;
+    &:hover { border-color: $lt-border-accent; box-shadow: $lt-shadow-hover; }
+  }
+  .inc__kpi-label { color: $lt-text-muted; }
+  .inc__kpi-value { color: $lt-text; }
+  .inc__kpi-unit  { color: $lt-text-muted; }
+  .inc__kpi-sub   { color: $lt-text-muted; }
+
+  .inc__avail-badge { background: rgba(5,150,105,0.10); border-color: rgba(5,150,105,0.25); }
+  .inc__avail-value { color: $lt-success; }
+  .inc__avail-label { color: $lt-text-muted; }
+  .inc__avail-sub   { color: $lt-text-muted; }
+
+  // -- Charts ----------------------------------------------------------------
+  .inc__chart-panel {
+    background: $lt-bg-card;
+    border-color: $lt-border;
+    box-shadow: $lt-shadow;
+  }
+
+  // -- Tabs ------------------------------------------------------------------
+  .inc__tabs { border-bottom-color: $lt-border; }
+  .inc__tab {
+    color: $lt-text-muted;
+    background: none;
+    &:hover { color: $lt-accent; }
+    &.inc__tab--active { color: $lt-accent; border-bottom-color: $lt-accent; }
+  }
+
+  // -- Panel -----------------------------------------------------------------
+  .inc__panel {
+    background: $lt-bg-card;
+    border-color: $lt-border;
+    box-shadow: $lt-shadow;
+    &:hover { border-color: $lt-border-accent; }
+  }
+  .inc__panel-title { color: $lt-text-header; }
+  .inc__table-hint  { color: $lt-text-muted; }
+
+  // -- Table -----------------------------------------------------------------
+  .inc__table {
+    th {
+      color: $lt-text-header;
+      background: $lt-bg-elevated;
+      border-bottom-color: $lt-border;
+    }
+    td {
+      color: $lt-text;
+      border-bottom-color: $lt-border;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f1f5fa; }
+  }
+
+  .inc__td-mono { color: $lt-text-muted; }
+
+  // -- Inputs / selects ------------------------------------------------------
+  .inc__claim-input {
+    background: $lt-bg-surface;
+    border-color: $lt-border;
+    color: $lt-text;
+    &::placeholder { color: $lt-text-muted; }
+    &:focus { border-color: $lt-accent; box-shadow: 0 0 0 2px $lt-accent-glow; }
+  }
+
+  .inc__ws-select {
+    option { background: $lt-bg-surface; color: $lt-text; }
+    &:focus { box-shadow: 0 0 0 2px $lt-accent-glow; }
+  }
+
+  // -- Save button -----------------------------------------------------------
+  .inc__save-btn {
+    background: $lt-bg-elevated;
+    border-color: $lt-border;
+    color: $lt-text-muted;
+    &:hover { background: $lt-accent-dim; color: $lt-accent; border-color: $lt-border-accent; }
+  }
+
+  // -- Tooltip ---------------------------------------------------------------
+  .inc__tooltip {
+    background: $lt-bg-card;
+    border-color: $lt-border;
+    color: $lt-text;
+    box-shadow: $lt-shadow;
+  }
+  .inc__tooltip-label { color: $lt-text-muted; }
+
+  // -- History / recurrence --------------------------------------------------
+  .inc__hist-summary  { color: $lt-text-muted; }
+  .inc__hist-kpi      { background: $lt-bg-card; border-color: $lt-border; }
+  .inc__recurrence-episodes { background: $lt-bg-elevated; }
+
+  // -- Portal org cards ------------------------------------------------------
+  .portal__org-card {
+    background: $lt-bg-card;
+    border-color: $lt-border;
+    box-shadow: $lt-shadow;
+    &:hover { border-color: $lt-border-accent; box-shadow: $lt-shadow-hover; }
+  }
+  .portal__org-name    { color: $lt-text; }
+  .portal__org-metrics { color: $lt-text-muted; }
+  .portal__network-row { border-color: $lt-border; &:hover { background: $lt-bg-elevated; } }
+  .portal__network-title { color: $lt-text; }
+  .portal__filters { background: $lt-bg-card; border-color: $lt-border; }
+
+  // -- Navbar dropdown -------------------------------------------------------
+  .navbar__dropdown-menu {
+    background: $lt-bg-card;
+    border-color: $lt-border;
+    box-shadow: $lt-shadow;
+    a { color: $lt-text-muted; &:hover { color: $lt-accent; background: $lt-accent-dim; } }
+  }
+
+  // -- Footer note -----------------------------------------------------------
+  .inc__footer-note { color: $lt-text-muted; border-top-color: $lt-border; }
+
+  // -- btn__outline ----------------------------------------------------------
+  .btn__outline {
+    border-color: $lt-border-accent;
+    color: $lt-accent;
+    background: $lt-accent-dim;
+    &:hover { background: rgba(29,111,218,0.18); }
+  }
+}

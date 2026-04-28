@@ -11,6 +11,7 @@
   padding: 0 1.5rem;
   display: flex;
   justify-content: space-between;
+  font-family: 'Roboto', $font-ui;
 
   nav {
     display: flex;
@@ -93,7 +94,42 @@
   }
 }
 
-// Logo Meraki estilo tech
+// Logo Cisco alineado a la izquierda
+.navbar__cisco-logo {
+  height:1.5em;
+  
+  width: auto;
+  display: block;
+}
+
+// Logo centrado en el navbar
+.navbar__logo {
+  height: 84px;
+  width: auto;
+  display: block;
+  
+  //transition: opacity 0.2s;
+
+  &:hover { opacity: 0.85; }
+}
+
+// Navbar siempre oscuro (no se altera con data-theme="light")
+[data-theme="light"] .navbar__container {
+  background-color: #0d1520;
+  border-bottom-color: rgba(255,255,255,0.06);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+
+  nav a {
+    color: #64748b;
+    &:hover { color: #00d4ff; background: rgba(0,212,255,0.08); }
+    &.active {
+      color: #00d4ff;
+      &::after { background: #00d4ff; }
+    }
+  }
+}
+
+// Logo Meraki estilo tech (legacy)
 .merakiFont {
   font-size: 1.4rem;
   font-family: $font-mono;

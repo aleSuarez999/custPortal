@@ -3,7 +3,7 @@ import api from '../utils/api'
 import { useNavigate } from 'react-router-dom'
 import logo from '../assets/personal-tech-logo-blanco.svg'
 //import logo from '../assets/logo.webp'
-import ciscoLogo from '../assets/cisco.svg'
+import ciscoLogo from '../assets/logocisco.svg'
 
 export default function Login() {
   const [username, setUsername] = useState('')
@@ -39,7 +39,10 @@ export default function Login() {
       <div className="login-brand">
         <img src={logo} alt="logo" className="login-logo" />
         <span className="login-sdwan">SD-WAN</span>
-        <img src={ciscoLogo} alt="Cisco Meraki" className="login-cisco" />
+        <div className='d-flex'>
+        <img src={ciscoLogo} alt="Cisco Meraki" className="login-cisco pr-2" />
+        <div class="mds-header-branding-name pl-2"><a href="https://n356.dashboard.meraki.com/o/3Dn5zb/manage/dashboard">Meraki</a></div>
+        </div>
       </div>
 
       <div className="login__container">
