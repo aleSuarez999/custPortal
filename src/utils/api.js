@@ -683,3 +683,12 @@ export const getSlaReport = async (month = null, orgId = null) => {
     return null
   }
 }
+
+export const getOrgBrandingLogo = async (orgId) => {
+  try {
+    const resp = await axiosInstance.get(`/organizations/${orgId}/branding-logo`)
+    return resp.data?.logoDataUrl || null
+  } catch {
+    return null
+  }
+}
