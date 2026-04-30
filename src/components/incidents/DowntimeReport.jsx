@@ -180,6 +180,30 @@ export function DowntimeReport({ selectedOrg }) {
     win.focus()
   }
 
+  const handleCsv = () => {
+    if (!rows.length) return
+    const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`
+    const fmtDt = d => d ? new Date(d).toLocaleString('es-AR') : ''
+    const headers = ['Sitio', 'Org', 'Caida', 'Up', 'Downtime', 'Claim #', 'Notas']
+    const body = rows.map(r => [
+      esc(r.networkName),
+      esc(r.orgName),
+      esc(fmtDt(r.detectedAt)),
+      esc(fmtDt(r.effectiveEnd)),
+      esc(r.downtimeHuman),
+      esc(r.claimNumber),
+      esc(r.resolutionNotes),
+    ].join(','))
+    const csv = '\uFEFF' + [headers.map(esc).join(','), ...body].join('\r\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    a.href     = url
+    a.download = `downtime-${month}${orgName ? '-' + orgName.replace(/[^a-z0-9]/gi, '_') : ''}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div className="inc__panel">
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
@@ -205,6 +229,20 @@ export function DowntimeReport({ selectedOrg }) {
             }}
           >
             ↓ Generar PDF
+          </button>
+          <button
+            onClick={handleCsv}
+            disabled={!data || rows.length === 0}
+            style={{
+              padding: '0.28rem 1rem', borderRadius: 4,
+              border: `1px solid ${data && rows.length ? 'rgba(16,185,129,0.4)' : 'rgba(100,116,139,0.2)'}`,
+              background: data && rows.length ? 'rgba(16,185,129,0.10)' : 'rgba(100,116,139,0.06)',
+              color: data && rows.length ? '#10b981' : '#64748b',
+              fontSize: '0.78rem', fontWeight: 600, cursor: data && rows.length ? 'pointer' : 'default',
+              transition: 'all 0.15s',
+            }}
+          >
+            ↓ Exportar CSV
           </button>
         </div>
       </div>
