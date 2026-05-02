@@ -128,20 +128,7 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
                 {suspendedRecovered ? '⬆ levanto' : `↻ ${inc.recurrenceCount}`}
               </span>
             )}
-            {inProgressRecovered && (
-              <span
-                title={`Sitio recuperado automaticamente el ${new Date(inc.lastAutoResolvedAt).toLocaleString('es-AR')} — revisar y cerrar`}
-                style={{
-                  fontSize: '0.62rem', fontWeight: 700, fontFamily: 'monospace',
-                  color: '#10b981', background: 'rgba(16,185,129,0.15)',
-                  border: '1px solid rgba(16,185,129,0.4)',
-                  borderRadius: 3, padding: '0 0.3rem', cursor: 'default', alignSelf: 'flex-start',
-                  animation: 'pulse-green 2s ease-in-out infinite',
-                }}
-              >
-                ⬆ online
-              </span>
-            )}
+       
           </div>
         </td>
         <td className="inc__td-mono">
