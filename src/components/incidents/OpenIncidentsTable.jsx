@@ -8,10 +8,23 @@ import {
   fmtDate, toDatetimeLocal,
 } from './incidentConstants'
 
+function deriveType(model) {
+  if (!model) return null
+  const m = model.toUpperCase()
+  if (m.startsWith('MX')) return 'MX'
+  if (m.startsWith('MS')) return 'MS'
+  if (m.startsWith('MR') || m.startsWith('CW')) return 'MR'
+  if (m.startsWith('MG')) return 'MG'
+  return null
+}
+
 // Agrupa incidentes jerárquicamente usando uplinkSerial.
 // Retorna array plano ordenado: root → sus hijos → sus nietos (depth=0,1,2)
 function buildHierarchy(rows) {
-  const bySerial = new Map(rows.map(r => [r.deviceSerial, r._id]))
+  //const bySerial = new Map(rows.map(r => [r.deviceSerial, r._id]))
+  //por si vienen espacios en el serial, que es lo que suele pasar en los incidentes WAN
+  const bySerial = new Map(rows.map(r => [r.deviceSerial?.trim(), r._id]))
+
   const childrenOf = new Map()   // parentIncId → [child incs]
   const isChild    = new Set()   // incIds que son hijos de alguien
 
@@ -136,6 +149,22 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
           {orgName && (
             <span style={{ display: 'block', fontSize: '0.65rem', color: COLOR_MUTED, marginTop: '0.1rem' }}>{orgName}</span>
           )}
+        </td>
+        <td style={{ textAlign: 'center' }}>
+          {(() => {
+            const t = inc.deviceType || deriveType(inc.deviceModel)
+            const COLORS = { MX: '#00d4ff', MS: '#10b981', MR: '#a78bfa', MG: '#f59e0b' }
+            const BKGS   = { MX: 'rgba(0,212,255,0.08)', MS: 'rgba(16,185,129,0.08)', MR: 'rgba(167,139,250,0.08)', MG: 'rgba(245,158,11,0.08)' }
+            const BORDS  = { MX: 'rgba(0,212,255,0.25)', MS: 'rgba(16,185,129,0.25)', MR: 'rgba(167,139,250,0.25)', MG: 'rgba(245,158,11,0.25)' }
+            return t
+              ? <span style={{
+                  fontSize: '0.65rem', fontWeight: 700, fontFamily: 'monospace',
+                  color: COLORS[t] || '#64748b', background: BKGS[t] || 'transparent',
+                  border: `1px solid ${BORDS[t] || 'transparent'}`,
+                  borderRadius: 3, padding: '0.05rem 0.3rem',
+                }}>{t}</span>
+              : <span style={{ color: '#475569' }}>—</span>
+          })()}
         </td>
         <td className="inc__td-mono">
           {isCascade && (
@@ -332,6 +361,7 @@ export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onN
               <th>S</th>
               <th>Severity</th>
               <th>Network</th>
+              <th>Type</th>
               <th>Device</th>
               <th>WAN</th>
               <th>Detected</th>
