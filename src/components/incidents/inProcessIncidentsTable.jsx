@@ -270,7 +270,7 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
   )
 }
 
-export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncident, orgs, showOrg }) {
+export function InProcessIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncident, orgs, showOrg }) {
   const { theme } = useTheme()
   const [selected, setSelected] = useState([])
   const [bulkClaim, setBulkClaim] = useState('')
@@ -282,7 +282,8 @@ export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onN
   const toggleSelect = id =>
     setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
 
-  const SEVERITY_ORDER = { critical: 0, high: 1, medium: 2 }
+
+    const SEVERITY_ORDER = { critical: 0, high: 1, medium: 2 }
   const STATUS_ORDER   = { active: 0, in_progress: 1 }
 
   const sortRows = arr => [...arr].sort((a, b) => {
@@ -293,7 +294,6 @@ export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onN
     if (sevDiff !== 0) return sevDiff
     return (STATUS_ORDER[a.workStatus] ?? 9) - (STATUS_ORDER[b.workStatus] ?? 9)
   })
-
   const filteredRows = sortRows(filterStatus === 'all' ? rows : rows.filter(r => r.workStatus === filterStatus))
 
   const toggleAll = () =>

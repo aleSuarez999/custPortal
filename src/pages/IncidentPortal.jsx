@@ -13,6 +13,7 @@ import {
 } from '../utils/api'
 import Text from '../components/Text'
 import { OpenIncidentsTable }    from '../components/incidents/OpenIncidentsTable'
+import { InProcessIncidentsTable } from '../components/incidents/inProcessIncidentsTable'
 import { ResolvedReportTable }   from '../components/incidents/ResolvedReportTable'
 import { RecurrenceTable }       from '../components/incidents/RecurrenceTable'
 import { SlaReportTable }        from '../components/incidents/SlaReport'
@@ -59,6 +60,26 @@ export default function IncidentManagement() {
   const [error, setError]   = useState(null)
   const [days, setDays]     = useState(7)
   const [activeTab, setActiveTab] = useState('open')
+  const [hiddenTabs, setHiddenTabs] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('inc_hidden_tabs') || '[]') } catch { return [] }
+  })
+  const [showTabMenu, setShowTabMenu] = useState(false)
+
+  const TOGGLEABLE_TABS = [
+    { key: 'inprogress',  label: 'In Progress' },
+    { key: 'resolved',    label: 'Resolved' },
+    { key: 'recurrence',  label: 'Reincidencias' },
+    { key: 'downtime',    label: 'Downtime Mensual' },
+  ]
+
+  const toggleTabVisibility = key => {
+    setHiddenTabs(prev => {
+      const next = prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+      localStorage.setItem('inc_hidden_tabs', JSON.stringify(next))
+      return next
+    })
+    setActiveTab(t => (t === key ? 'open' : t))
+  }
 
   const fetchData = async () => {
     if (!selectedOrg) return
@@ -316,24 +337,70 @@ export default function IncidentManagement() {
                 {data.recentOpen?.length ?? data.kpis.openIncidents}
               </span>
             </button>
-            <button className={`inc__tab${activeTab === 'resolved' ? ' inc__tab--active' : ''}`}
-              onClick={() => setActiveTab('resolved')}>
-              Resolved Report
-            </button>
-            <button className={`inc__tab${activeTab === 'recurrence' ? ' inc__tab--active' : ''}`}
-              onClick={() => setActiveTab('recurrence')}>
-              Reincidencias
-            </button>
-            <button className={`inc__tab${activeTab === 'downtime' ? ' inc__tab--active' : ''}`}
-              onClick={() => setActiveTab('downtime')}>
-              Downtime Mensual
-            </button>
+            {!hiddenTabs.includes('inprogress') && (
+              <button className={`inc__tab${activeTab === 'inprogress' ? ' inc__tab--active' : ''}`}
+                onClick={() => setActiveTab('inprogress')}>
+                In Progress
+                <span className="inc__badge inc__badge--count" style={{ marginLeft: '0.5rem' }}>
+                  {data.recentOpen?.filter(r => r.workStatus === 'in_progress').length ?? 0}
+                </span>
+              </button>
+            )}
+            {!hiddenTabs.includes('resolved') && (
+              <button className={`inc__tab${activeTab === 'resolved' ? ' inc__tab--active' : ''}`}
+                onClick={() => setActiveTab('resolved')}>
+                Resolved Report
+              </button>
+            )}
+
+            {!hiddenTabs.includes('recurrence') && (
+              <button className={`inc__tab${activeTab === 'recurrence' ? ' inc__tab--active' : ''}`}
+                onClick={() => setActiveTab('recurrence')}>
+                Reincidencias
+              </button>
+            )}
+            {!hiddenTabs.includes('downtime') && (
+              <button className={`inc__tab${activeTab === 'downtime' ? ' inc__tab--active' : ''}`}
+                onClick={() => setActiveTab('downtime')}>
+                Downtime Mensual
+              </button>
+            )}
             {isAdmin && (
               <button className={`inc__tab${activeTab === 'sla' ? ' inc__tab--active' : ''}`}
                 onClick={() => setActiveTab('sla')}>
                 SLA Mensual
               </button>
             )}
+            <div style={{ marginLeft: 'auto', position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <button
+                onClick={() => setShowTabMenu(v => !v)}
+                title="Mostrar/ocultar solapas"
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem',
+                  color: showTabMenu ? '#00d4ff' : '#64748b', padding: '0.25rem 0.4rem',
+                  borderRadius: 4, transition: 'color 0.15s',
+                }}
+              >⚙</button>
+              {showTabMenu && (
+                <div style={{
+                  position: 'absolute', top: '110%', right: 0, zIndex: 100,
+                  background: '#1e293b', border: '1px solid #334155', borderRadius: 6,
+                  padding: '0.5rem 0.75rem', minWidth: 170, boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+                }}>
+                  {TOGGLEABLE_TABS.map(t => (
+                    <label key={t.key} style={{
+                      display: 'flex', alignItems: 'center', gap: '0.5rem',
+                      cursor: 'pointer', padding: '0.25rem 0', fontSize: '0.82rem', color: '#e2e8f0',
+                    }}>
+                      <input type="checkbox" checked={!hiddenTabs.includes(t.key)}
+                        onChange={() => toggleTabVisibility(t.key)}
+                        style={{ accentColor: '#00d4ff', cursor: 'pointer' }} />
+                      {t.label}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {activeTab === 'open' && (
@@ -352,6 +419,20 @@ export default function IncidentManagement() {
                   const order = { DEVICE_OFFLINE: 0, UPLINK_DOWN: 1 }
                   return (order[a.incidentType] ?? 2) - (order[b.incidentType] ?? 2)
                 })}
+                onSave={handleSaveIncident}
+                onBulkClaim={handleBulkClaim}
+                onToggleSLA={handleToggleSLA}
+                onNewIncident={handleNewIncident}
+                orgs={orgs}
+                showOrg={selectedOrg === 'ALL'}
+              />
+            </div>
+          )}
+
+          {activeTab === 'inprogress' && (
+            <div className="inc__panel">
+              <InProcessIncidentsTable
+                rows={data.recentOpen.filter(r => r.workStatus === 'in_progress')}
                 onSave={handleSaveIncident}
                 onBulkClaim={handleBulkClaim}
                 onToggleSLA={handleToggleSLA}
