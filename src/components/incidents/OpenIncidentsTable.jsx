@@ -8,7 +8,34 @@ import {
   fmtDate, toDatetimeLocal,
 } from './incidentConstants'
 
-function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, onToggleSelect, orgName }) {
+// Agrupa incidentes jerárquicamente usando uplinkSerial.
+// Retorna array plano ordenado: root → sus hijos → sus nietos (depth=0,1,2)
+function buildHierarchy(rows) {
+  const bySerial = new Map(rows.map(r => [r.deviceSerial, r._id]))
+  const childrenOf = new Map()   // parentIncId → [child incs]
+  const isChild    = new Set()   // incIds que son hijos de alguien
+
+  for (const inc of rows) {
+    if (!inc.uplinkSerial) continue
+    const parentId = bySerial.get(inc.uplinkSerial)
+    if (!parentId) continue
+    if (!childrenOf.has(parentId)) childrenOf.set(parentId, [])
+    childrenOf.get(parentId).push(inc)
+    isChild.add(inc._id)
+  }
+
+  const result = []
+  const walk = (inc, depth) => {
+    result.push({ inc, depth })
+    for (const child of (childrenOf.get(inc._id) || [])) walk(child, depth + 1)
+  }
+  for (const inc of rows) {
+    if (!isChild.has(inc._id)) walk(inc, 0)
+  }
+  return result
+}
+
+function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, onToggleSelect, orgName, depth }) {
   const [expanded, setExpanded] = useState(false)
   const [detail, setDetail] = useState(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
@@ -49,14 +76,20 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
   }
 
   const cfg = WORK_STATUS_CFG[ws] || WORK_STATUS_CFG.active
-  const suspendedRecovered = ws === 'suspended' && (inc.recurrenceCount ?? 0) > 0
+  const suspendedRecovered   = ws === 'suspended'    && (inc.recurrenceCount ?? 0) > 0
+  const inProgressRecovered = ws === 'in_progress' && !!inc.lastAutoResolvedAt
+  const isCascade = depth > 0
   const rowStyle =
     suspendedRecovered
       ? { background: 'rgba(16,185,129,0.07)', borderLeft: '3px solid #10b981' }
       : ws === 'suspended'
       ? { opacity: 0.45, filter: 'grayscale(0.6)', borderLeft: '3px solid #475569' }
+      : inProgressRecovered
+      ? { background: 'rgba(16,185,129,0.07)', borderLeft: '3px solid #10b981' }
       : ws === 'in_progress'
       ? { background: 'rgba(245,158,11,0.07)', borderLeft: `3px solid ${COLOR_WARNING}` }
+      : isCascade
+      ? { background: 'rgba(100,116,139,0.06)', borderLeft: '3px solid #334155' }
       : {}
 
   return (
@@ -95,6 +128,20 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
                 {suspendedRecovered ? '⬆ levanto' : `↻ ${inc.recurrenceCount}`}
               </span>
             )}
+            {inProgressRecovered && (
+              <span
+                title={`Sitio recuperado automaticamente el ${new Date(inc.lastAutoResolvedAt).toLocaleString('es-AR')} — revisar y cerrar`}
+                style={{
+                  fontSize: '0.62rem', fontWeight: 700, fontFamily: 'monospace',
+                  color: '#10b981', background: 'rgba(16,185,129,0.15)',
+                  border: '1px solid rgba(16,185,129,0.4)',
+                  borderRadius: 3, padding: '0 0.3rem', cursor: 'default', alignSelf: 'flex-start',
+                  animation: 'pulse-green 2s ease-in-out infinite',
+                }}
+              >
+                ⬆ online
+              </span>
+            )}
           </div>
         </td>
         <td className="inc__td-mono">
@@ -103,7 +150,17 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
             <span style={{ display: 'block', fontSize: '0.65rem', color: COLOR_MUTED, marginTop: '0.1rem' }}>{orgName}</span>
           )}
         </td>
-        <td className="inc__td-mono">{inc.deviceSerial || '—'}</td>
+        <td className="inc__td-mono">
+          {isCascade && (
+            <span style={{ color: '#475569', marginRight: '0.3rem', userSelect: 'none' }}>
+              {'└'.padStart(depth * 2, ' ')}
+            </span>
+          )}
+          {inc.deviceSerial || '—'}
+          {isCascade && (
+            <span title="Impactado por upstream" style={{ marginLeft: '0.3rem', fontSize: '0.65rem', color: '#64748b' }}>↳</span>
+          )}
+        </td>
         <td>
           {inc.uplinkInterface
             ? <span className="inc__badge" style={{
@@ -303,10 +360,11 @@ export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onN
               ? <tr><td colSpan={12} style={{ textAlign: 'center', color: COLOR_MUTED, padding: '1.5rem 0', fontSize: '0.85rem' }}>
                   Sin incidentes con estado "{STATUS_FILTERS.find(f => f.key === filterStatus)?.label}"
                 </td></tr>
-              : filteredRows.map(r => (
+              : buildHierarchy(filteredRows).map(({ inc: r, depth }) => (
                 <OpenIncidentRow
                   key={r._id}
                   inc={r}
+                  depth={depth}
                   onSave={onSave}
                   onToggleSLA={onToggleSLA}
                   onNewIncident={onNewIncident}
