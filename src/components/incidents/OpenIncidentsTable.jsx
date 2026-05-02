@@ -19,19 +19,22 @@ function deriveType(model) {
 }
 
 // Agrupa incidentes jerárquicamente usando uplinkSerial.
+// Los hijos solo se anidan (y desaparecen del nivel raíz) cuando el padre está en 'in_progress'.
 // Retorna array plano ordenado: root → sus hijos → sus nietos (depth=0,1,2)
 function buildHierarchy(rows) {
-  //const bySerial = new Map(rows.map(r => [r.deviceSerial, r._id]))
-  //por si vienen espacios en el serial, que es lo que suele pasar en los incidentes WAN
   const bySerial = new Map(rows.map(r => [r.deviceSerial?.trim(), r._id]))
+  const byId     = new Map(rows.map(r => [r._id, r]))
 
   const childrenOf = new Map()   // parentIncId → [child incs]
-  const isChild    = new Set()   // incIds que son hijos de alguien
+  const isChild    = new Set()   // incIds que son hijos de alguien (solo cuando padre in_progress)
 
   for (const inc of rows) {
     if (!inc.uplinkSerial) continue
-    const parentId = bySerial.get(inc.uplinkSerial)
+    const parentId = bySerial.get(inc.uplinkSerial?.trim())
     if (!parentId) continue
+    const parent = byId.get(parentId)
+    // Solo anidar si el padre está siendo gestionado (in_progress)
+    if (parent?.workStatus !== 'in_progress') continue
     if (!childrenOf.has(parentId)) childrenOf.set(parentId, [])
     childrenOf.get(parentId).push(inc)
     isChild.add(inc._id)
@@ -148,6 +151,18 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
           {inc.networkName || inc.networkId || '—'}
           {orgName && (
             <span style={{ display: 'block', fontSize: '0.65rem', color: COLOR_MUTED, marginTop: '0.1rem' }}>{orgName}</span>
+          )}
+          {inc.tags?.length > 0 && (
+            <span style={{ display: 'flex', gap: '0.2rem', flexWrap: 'wrap', marginTop: '0.2rem' }}>
+              {inc.tags.map(tag => (
+                <span key={tag} style={{
+                  fontSize: '0.6rem', fontWeight: 600, fontFamily: 'monospace',
+                  color: '#f59e0b', background: 'rgba(245,158,11,0.1)',
+                  border: '1px solid rgba(245,158,11,0.3)',
+                  borderRadius: 3, padding: '0.05rem 0.25rem',
+                }}>{tag}</span>
+              ))}
+            </span>
           )}
         </td>
         <td style={{ textAlign: 'center' }}>
