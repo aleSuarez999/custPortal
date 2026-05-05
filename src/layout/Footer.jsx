@@ -1,7 +1,7 @@
 ﻿import React from 'react'
 import Text from '../components/Text'
 
-const APP_VERSION = '1.0.0'
+const APP_VERSION = '1.0.1'
 
 function Footer() {
   return (
