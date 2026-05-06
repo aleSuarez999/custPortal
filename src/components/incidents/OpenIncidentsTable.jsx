@@ -40,18 +40,50 @@ function buildHierarchy(rows) {
     isChild.add(inc._id)
   }
 
-  const result = []
+  // CRITICAL MX cascade: otros incidentes de la misma red se agrupan bajo el MX crítico
+  const criticalMxByNetwork = new Map() // networkId → MX inc._id
+  for (const inc of rows) {
+    if (isChild.has(inc._id)) continue
+    const t = inc.deviceType || deriveType(inc.deviceModel)
+    if (inc.severity === 'critical' && t === 'MX') {
+      criticalMxByNetwork.set(inc.networkId, inc._id)
+    }
+  }
+
+  const cascadeParentOf = new Map() // childIncId → parentMxIncId
+  for (const inc of rows) {
+    if (isChild.has(inc._id)) continue
+    const parentMxId = criticalMxByNetwork.get(inc.networkId)
+    if (!parentMxId || parentMxId === inc._id) continue
+    cascadeParentOf.set(inc._id, parentMxId)
+  }
+
+  const flat = []
   const walk = (inc, depth) => {
-    result.push({ inc, depth })
+    flat.push({ inc, depth, cascadeParentId: null })
     for (const child of (childrenOf.get(inc._id) || [])) walk(child, depth + 1)
   }
   for (const inc of rows) {
-    if (!isChild.has(inc._id)) walk(inc, 0)
+    if (!isChild.has(inc._id) && !cascadeParentOf.has(inc._id)) walk(inc, 0)
   }
+
+  // Insertar cascade children inmediatamente después de su MX CRITICAL padre
+  const result = []
+  for (const item of flat) {
+    result.push(item)
+    if (criticalMxByNetwork.get(item.inc.networkId) === item.inc._id) {
+      for (const inc of rows) {
+        if (cascadeParentOf.get(inc._id) === item.inc._id) {
+          result.push({ inc, depth: item.depth + 1, cascadeParentId: item.inc._id })
+        }
+      }
+    }
+  }
+
   return result
 }
 
-function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, onToggleSelect, orgName, depth }) {
+function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, onToggleSelect, orgName, depth, cascadeCount = 0, isCascadeExpanded = false, onToggleCascade }) {
   const [expanded, setExpanded] = useState(false)
   const [detail, setDetail] = useState(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
@@ -149,6 +181,23 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
         </td>
         <td className="inc__td-mono">
           {inc.networkName || inc.networkId || '—'}
+          {cascadeCount > 0 && (
+            <span
+              onClick={e => { e.stopPropagation(); onToggleCascade?.() }}
+              title={isCascadeExpanded ? 'Ocultar dispositivos en cascada' : `${cascadeCount} dispositivo${cascadeCount > 1 ? 's' : ''} caído${cascadeCount > 1 ? 's' : ''} por red caída`}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.2rem',
+                marginLeft: '0.4rem',
+                fontSize: '0.6rem', fontWeight: 600, fontFamily: 'monospace',
+                color: isCascadeExpanded ? '#64748b' : '#f97316',
+                background: isCascadeExpanded ? 'rgba(100,116,139,0.1)' : 'rgba(249,115,22,0.1)',
+                border: `1px solid ${isCascadeExpanded ? 'rgba(100,116,139,0.3)' : 'rgba(249,115,22,0.3)'}`,
+                borderRadius: 3, padding: '0.05rem 0.3rem', cursor: 'pointer', userSelect: 'none',
+              }}
+            >
+              {isCascadeExpanded ? '▴' : '▾'} {isCascadeExpanded ? 'ocultar' : `+${cascadeCount}`}
+            </span>
+          )}
           {orgName && (
             <span style={{ display: 'block', fontSize: '0.65rem', color: COLOR_MUTED, marginTop: '0.1rem' }}>{orgName}</span>
           )}
@@ -278,6 +327,17 @@ export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onN
   const [bulkNotes, setBulkNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [filterStatus, setFilterStatus] = useState('all')
+  const [filterType, setFilterType] = useState(null)
+  const [filterWan, setFilterWan] = useState(null)
+  const [expandedCritical, setExpandedCritical] = useState(new Set())
+
+  const toggleCriticalCascade = id =>
+    setExpandedCritical(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
 
   const toggleSelect = id =>
     setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
@@ -294,7 +354,23 @@ export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onN
     return (STATUS_ORDER[a.workStatus] ?? 9) - (STATUS_ORDER[b.workStatus] ?? 9)
   })
 
-  const filteredRows = sortRows(filterStatus === 'all' ? rows : rows.filter(r => r.workStatus === filterStatus))
+  const filteredRows = sortRows(
+    (filterStatus === 'all' ? rows : rows.filter(r => r.workStatus === filterStatus))
+      .filter(r => !filterType || (r.deviceType || deriveType(r.deviceModel)) === filterType)
+      .filter(r => !filterWan || r.uplinkInterface === filterWan)
+  )
+  const hierarchy = buildHierarchy(filteredRows)
+
+  const cascadeCountByParent = {}
+  for (const { cascadeParentId } of hierarchy) {
+    if (cascadeParentId) {
+      cascadeCountByParent[cascadeParentId] = (cascadeCountByParent[cascadeParentId] || 0) + 1
+    }
+  }
+
+  const visibleHierarchy = hierarchy.filter(({ cascadeParentId }) =>
+    !cascadeParentId || expandedCritical.has(cascadeParentId)
+  )
 
   const toggleAll = () =>
     setSelected(prev => prev.length === filteredRows.length ? [] : filteredRows.map(r => r._id))
@@ -319,7 +395,7 @@ export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onN
 
   return (
     <>
-      <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.6rem', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
         {STATUS_FILTERS.map(f => {
           const active = filterStatus === f.key
           const cfg = WORK_STATUS_CFG[f.key]
@@ -343,6 +419,75 @@ export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onN
             </button>
           )
         })}
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          {[
+            { type: 'MX', color: '#00d4ff', bg: 'rgba(0,212,255,0.08)', bgActive: 'rgba(0,212,255,0.18)', border: 'rgba(0,212,255,0.25)', borderActive: '#00d4ff' },
+            { type: 'MS', color: '#10b981', bg: 'rgba(16,185,129,0.08)', bgActive: 'rgba(16,185,129,0.18)', border: 'rgba(16,185,129,0.25)', borderActive: '#10b981' },
+            { type: 'MR', color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', bgActive: 'rgba(167,139,250,0.18)', border: 'rgba(167,139,250,0.25)', borderActive: '#a78bfa' },
+            { type: 'MG', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', bgActive: 'rgba(245,158,11,0.18)', border: 'rgba(245,158,11,0.25)', borderActive: '#f59e0b' },
+          ].map(({ type, color, bg, bgActive, border, borderActive }) => {
+            const count = rows.filter(r => (r.deviceType || deriveType(r.deviceModel)) === type).length
+            if (!count) return null
+            const active = filterType === type
+            return (
+              <span
+                key={type}
+                onClick={() => { setFilterType(active ? null : type); setSelected([]) }}
+                title={active ? `Quitar filtro ${type}` : `Filtrar por ${type}`}
+                style={{
+                  fontSize: '0.68rem', fontWeight: 700, fontFamily: 'monospace',
+                  color, background: active ? bgActive : bg,
+                  border: `1px solid ${active ? borderActive : border}`,
+                  borderRadius: 4, padding: '0.15rem 0.45rem',
+                  display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                  cursor: 'pointer', userSelect: 'none',
+                  boxShadow: active ? `0 0 0 1px ${borderActive}44` : 'none',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {type} <span style={{ opacity: active ? 1 : 0.75, fontWeight: active ? 700 : 400 }}>{count}</span>
+              </span>
+            )
+          })}
+        </div>
+        {(() => {
+          const WAN_CFG = {
+            wan1: { color: '#38bdf8', bg: 'rgba(56,189,248,0.08)', bgActive: 'rgba(56,189,248,0.18)', border: 'rgba(56,189,248,0.25)', borderActive: '#38bdf8' },
+            wan2: { color: '#fb923c', bg: 'rgba(251,146,60,0.08)', bgActive: 'rgba(251,146,60,0.18)', border: 'rgba(251,146,60,0.25)', borderActive: '#fb923c' },
+          }
+          const WAN_FALLBACK = { color: '#94a3b8', bg: 'rgba(148,163,184,0.08)', bgActive: 'rgba(148,163,184,0.18)', border: 'rgba(148,163,184,0.25)', borderActive: '#94a3b8' }
+          const wanTypes = [...new Set(rows.map(r => r.uplinkInterface).filter(Boolean))].sort()
+          if (!wanTypes.length) return null
+          return (
+            <>
+              <span style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.1)', margin: '0 0.15rem', flexShrink: 0 }} />
+              {wanTypes.map(wan => {
+                const count = rows.filter(r => r.uplinkInterface === wan).length
+                const cfg = WAN_CFG[wan] || WAN_FALLBACK
+                const active = filterWan === wan
+                return (
+                  <span
+                    key={wan}
+                    onClick={() => { setFilterWan(active ? null : wan); setSelected([]) }}
+                    title={active ? `Quitar filtro ${wan.toUpperCase()}` : `Filtrar por ${wan.toUpperCase()}`}
+                    style={{
+                      fontSize: '0.68rem', fontWeight: 700, fontFamily: 'monospace',
+                      color: cfg.color, background: active ? cfg.bgActive : cfg.bg,
+                      border: `1px solid ${active ? cfg.borderActive : cfg.border}`,
+                      borderRadius: 4, padding: '0.15rem 0.45rem',
+                      display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                      cursor: 'pointer', userSelect: 'none',
+                      boxShadow: active ? `0 0 0 1px ${cfg.borderActive}44` : 'none',
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    {wan.toUpperCase()} <span style={{ opacity: active ? 1 : 0.75, fontWeight: active ? 700 : 400 }}>{count}</span>
+                  </span>
+                )
+              })}
+            </>
+          )
+        })()}
       </div>
 
       {selected.length > 0 && (
@@ -404,7 +549,7 @@ export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onN
               ? <tr><td colSpan={12} style={{ textAlign: 'center', color: COLOR_MUTED, padding: '1.5rem 0', fontSize: '0.85rem' }}>
                   Sin incidentes con estado "{STATUS_FILTERS.find(f => f.key === filterStatus)?.label}"
                 </td></tr>
-              : buildHierarchy(filteredRows).map(({ inc: r, depth }) => (
+              : visibleHierarchy.map(({ inc: r, depth }) => (
                 <OpenIncidentRow
                   key={r._id}
                   inc={r}
@@ -415,6 +560,9 @@ export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onN
                   selected={selected.includes(r._id)}
                   onToggleSelect={toggleSelect}
                   orgName={showOrg ? (orgs?.find(o => o.id === r.orgId)?.name ?? '') : ''}
+                  cascadeCount={cascadeCountByParent[r._id] || 0}
+                  isCascadeExpanded={expandedCritical.has(r._id)}
+                  onToggleCascade={() => toggleCriticalCascade(r._id)}
                 />
               ))
             }
