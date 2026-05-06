@@ -490,6 +490,49 @@ export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onN
         })()}
       </div>
 
+      {(() => {
+        const recoveredWans = rows.filter(r =>
+          (r.uplinkInterface === 'wan1' || r.uplinkInterface === 'wan2') &&
+          r.workStatus === 'in_progress' &&
+          !!r.lastAutoResolvedAt
+        )
+        if (!recoveredWans.length) return null
+        const WAN_COLOR = { wan1: '#38bdf8', wan2: '#fb923c' }
+        return (
+          <div style={{
+            marginBottom: '0.6rem',
+            background: 'rgba(16,185,129,0.06)',
+            border: '1px solid rgba(16,185,129,0.3)',
+            borderRadius: 6,
+            padding: '0.45rem 0.75rem',
+            display: 'flex', flexWrap: 'wrap', gap: '0.4rem', alignItems: 'center',
+          }}>
+            <span style={{
+              color: '#10b981', fontWeight: 700, fontSize: '0.72rem',
+              fontFamily: 'monospace', whiteSpace: 'nowrap', marginRight: '0.2rem',
+            }}>
+              ⬆ WAN levantó
+            </span>
+            {recoveredWans.map(r => (
+              <span key={r._id} style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                background: 'rgba(16,185,129,0.1)',
+                border: '1px solid rgba(16,185,129,0.2)',
+                borderRadius: 4, padding: '0.15rem 0.5rem',
+                fontSize: '0.7rem', fontFamily: 'monospace',
+              }}>
+                <span style={{ color: WAN_COLOR[r.uplinkInterface] ?? '#94a3b8', fontWeight: 700 }}>
+                  {r.uplinkInterface.toUpperCase()}
+                </span>
+                <span style={{ color: '#cbd5e1' }}>{r.networkName || r.networkId}</span>
+                <span style={{ color: '#10b981', fontSize: '0.63rem' }}>
+                  ↑ {fmtDate(r.lastAutoResolvedAt)}
+                </span>
+              </span>
+            ))}
+          </div>
+        )
+      })()}
       {selected.length > 0 && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap',
