@@ -121,7 +121,7 @@ function buildPrintHtml({ rows, month, sitesCount, orgName, clientLogoUrl }) {
 </html>`
 }
 
-export function DowntimeReport({ selectedOrg }) {
+export function DowntimeReport({ selectedOrg, isAdmin = false }) {
   const defaultMonth = () => {
     const n = new Date()
     return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}`
@@ -184,11 +184,12 @@ export function DowntimeReport({ selectedOrg }) {
     if (!rows.length) return
     const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`
     const fmtDt = d => d ? new Date(d).toLocaleString('es-AR') : ''
-    const headers = ['Sitio', 'Org', 'Caida', 'Up', 'Downtime', 'Claim #', 'Notas']
+    const headers = ['Sitio', 'Org', 'Caida', ...(isAdmin ? ['In Progress'] : []), 'Up', 'Downtime', 'Claim #', 'Notas']
     const body = rows.map(r => [
       esc(r.networkName),
       esc(r.orgName),
       esc(fmtDt(r.detectedAt)),
+      ...(isAdmin ? [esc(fmtDt(r.inProgressAt))] : []),
       esc(fmtDt(r.effectiveEnd)),
       esc(r.downtimeHuman),
       esc(r.claimNumber),
@@ -268,6 +269,7 @@ export function DowntimeReport({ selectedOrg }) {
                       <th>Sitio</th>
                       <th>Org</th>
                       <th>Caida</th>
+                      {isAdmin && <th style={{ color: '#f59e0b' }}>In Progress</th>}
                       <th>Up</th>
                       <th>Downtime</th>
                       <th>Claim #</th>
@@ -282,6 +284,11 @@ export function DowntimeReport({ selectedOrg }) {
                           {r.orgName ?? '—'}
                         </td>
                         <td className="inc__td-mono">{r.detectedAt  ? fmtDate(r.detectedAt)  : '—'}</td>
+                        {isAdmin && (
+                          <td className="inc__td-mono" style={{ color: r.inProgressAt ? '#f59e0b' : '#475569' }}>
+                            {r.inProgressAt ? fmtDate(r.inProgressAt) : '—'}
+                          </td>
+                        )}
                         <td className="inc__td-mono">{r.effectiveEnd ? fmtDate(r.effectiveEnd) : '—'}</td>
                         <td className="inc__td-mono" style={{ fontWeight: 600 }}>{r.downtimeHuman ?? '—'}</td>
                         <td className="inc__td-mono" style={{ color: '#00d4ff' }}>{r.claimNumber || '—'}</td>

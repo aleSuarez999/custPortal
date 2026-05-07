@@ -460,7 +460,7 @@ export default function IncidentManagement() {
           )}
 
           {activeTab === 'downtime' && (
-            <DowntimeReport selectedOrg={selectedOrg} />
+            <DowntimeReport selectedOrg={selectedOrg} isAdmin={isAdmin} />
           )}
 
           {activeTab === 'sla' && isAdmin && (
