@@ -58,15 +58,17 @@ function ResolvedRow({ r, onDelete, onToggleSLA, onSave, onReopen }) {
               title="Mismo equipo y claim — downtime ya contabilizado en el vinculo principal">
               ↳ mismo equipo
             </span>
-          : r.countsSLA
-            ? <span className="inc__badge" style={{
-                background: r.downtimeMinutes > 60 ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
-                color:      r.downtimeMinutes > 60 ? COLOR_ERROR : COLOR_WARNING,
-                border:     `1px solid ${r.downtimeMinutes > 60 ? COLOR_ERROR : COLOR_WARNING}44`,
-              }}>
-                {r.downtimeHuman}
-              </span>
-            : <span style={{ color: COLOR_MUTED, fontSize: '0.72rem' }}>—</span>
+          : r.downtimeHuman
+            ? r.countsSLA
+              ? <span className="inc__badge" style={{
+                  background: r.downtimeMinutes > 60 ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
+                  color:      r.downtimeMinutes > 60 ? COLOR_ERROR : COLOR_WARNING,
+                  border:     `1px solid ${r.downtimeMinutes > 60 ? COLOR_ERROR : COLOR_WARNING}44`,
+                }}>
+                  {r.downtimeHuman}
+                </span>
+              : <span style={{ color: COLOR_MUTED, fontSize: '0.72rem' }} title="No cuenta SLA — informativo">{r.downtimeHuman}</span>
+            : <span style={{ color: '#475569', fontSize: '0.68rem' }}>—</span>
         }
       </td>
       <td style={{ textAlign: 'center' }}>
@@ -141,10 +143,12 @@ function ResolvedRow({ r, onDelete, onToggleSLA, onSave, onReopen }) {
 }
 
 export function ResolvedReportTable({ data, onDelete, onToggleSLA, onSave, onReopen }) {
+  const [filterManual, setFilterManual] = useState(false)
   if (!data) return null
   const { incidents } = data
 
   const manualIncidents  = incidents.filter(r => !!r.manualResolvedAt)
+  const displayed        = filterManual ? manualIncidents : incidents
   const primaryIncidents = manualIncidents.filter(r => !r.isDuplicateInGroup)
   const slaIncidents     = primaryIncidents.filter(r => r.countsSLA)
   const totalDT          = slaIncidents.reduce((acc, r) => acc + (r.downtimeMinutes || 0), 0)
@@ -153,10 +157,24 @@ export function ResolvedReportTable({ data, onDelete, onToggleSLA, onSave, onReo
 
   return (
     <div className="inc__panel">
-      <Text as="h3" className="inc__panel-title">
-        Resolved Incidents Report
-        <span className="inc__badge inc__badge--count">{primaryIncidents.length}</span>
-      </Text>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+        <Text as="h3" className="inc__panel-title" style={{ margin: 0 }}>
+          Resolved Incidents Report
+          <span className="inc__badge inc__badge--count">{displayed.length}</span>
+        </Text>
+        <button
+          onClick={() => setFilterManual(v => !v)}
+          style={{
+            fontSize: '0.72rem', fontWeight: 700, padding: '0.25rem 0.75rem', borderRadius: 4,
+            cursor: 'pointer', border: '1px solid', transition: 'all 0.15s',
+            background:   filterManual ? 'rgba(59,130,246,0.18)' : 'rgba(100,116,139,0.1)',
+            color:        filterManual ? '#60a5fa' : '#94a3b8',
+            borderColor:  filterManual ? '#3b82f644' : '#47556933',
+          }}
+        >
+          {filterManual ? 'Cierre manual' : 'Todos'}
+        </button>
+      </div>
 
       <div className="inc__kpi-row" style={{ marginBottom: '1rem' }}>
         <KpiCard label="Total Resolved"   value={primaryIncidents.length}    accent />
@@ -165,8 +183,8 @@ export function ResolvedReportTable({ data, onDelete, onToggleSLA, onSave, onReo
         <KpiCard label="Max SLA Downtime" value={formatDuration(maxDT)}      sub="evento unico" />
       </div>
 
-      {manualIncidents.length === 0
-        ? <p className="inc__empty">No hay incidentes cerrados manualmente en este periodo</p>
+      {displayed.length === 0
+        ? <p className="inc__empty">{filterManual ? 'No hay incidentes cerrados manualmente en este periodo' : 'No hay incidentes resueltos en este periodo'}</p>
         : (
           <div className="inc__table-wrap">
             <table className="inc__table">
@@ -186,7 +204,7 @@ export function ResolvedReportTable({ data, onDelete, onToggleSLA, onSave, onReo
                 </tr>
               </thead>
               <tbody>
-                {manualIncidents.map((r, i) => (
+                {displayed.map((r, i) => (
                   <ResolvedRow key={r._id || i} r={r}
                     onDelete={onDelete} onToggleSLA={onToggleSLA} onSave={onSave} onReopen={onReopen} />
                 ))}
