@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { useTheme } from '../../hooks/useTheme'
 import { getIncidentNetworkDetail } from '../../utils/api'
 import IncidentWanDetail from './IncidentWanDetail'
@@ -83,7 +83,7 @@ function buildHierarchy(rows) {
   return result
 }
 
-function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, onToggleSelect, orgName, depth, cascadeCount = 0, isCascadeExpanded = false, onToggleCascade }) {
+function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, onToggleSelect, orgName, depth, cascadeCount = 0, isCascadeExpanded = false, onToggleCascade, isReadonly = false }) {
   const [expanded, setExpanded] = useState(false)
   const [detail, setDetail] = useState(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
@@ -144,7 +144,7 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
     <>
       <tr onClick={toggleExpand} style={{ cursor: 'pointer', ...rowStyle }}>
         <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center', paddingRight: '0.25rem' }}>
-          <input type="checkbox" checked={selected} onChange={() => onToggleSelect(inc._id)}
+          <input type="checkbox" checked={selected} disabled={isReadonly} onChange={() => onToggleSelect(inc._id)}
             style={{ cursor: 'pointer', accentColor: COLOR_ACCENT }} />
         </td>
         <td className="inc__td-mono" style={{ color: COLOR_MUTED, fontSize: '0.75rem', textAlign: 'center' }}>
@@ -256,14 +256,14 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
                 onChange={e => handleDetectedChange(e.target.value)}
                 style={{ fontSize: '0.7rem', padding: '0.15rem 0.3rem', background: '#1e293b',
                   color: '#e2e8f0', border: '1px solid #3b82f6', borderRadius: 4, outline: 'none', width: '11rem' }} />
-            : <span title="Click para editar la fecha de deteccion" onClick={() => setEditingDetected(true)}
+            : <span title="Click para editar la fecha de deteccion" onClick={() => !isReadonly && setEditingDetected(true)}
                 style={{ cursor: 'pointer', borderBottom: '1px dashed #475569' }}>
                 {detectedAt ? fmtDate(detectedAt) : <span style={{ color: COLOR_WARNING, fontStyle: 'italic' }}>sin fecha</span>}
               </span>
           }
         </td>
         <td className="inc__td-mono" onClick={e => e.stopPropagation()}>
-          <select className="inc__ws-select" value={ws} onChange={e => handleWsChange(e.target.value)}
+          <select className="inc__ws-select" value={ws} disabled={isReadonly} onChange={e => handleWsChange(e.target.value)}
             style={{ color: cfg.color, borderColor: cfg.color + '88', background: cfg.bg }}>
             <option value="active">Active</option>
             <option value="in_progress">In Progress</option>
@@ -273,16 +273,16 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
         </td>
         <td className="inc__td-mono" onClick={e => e.stopPropagation()}>
           <input className="inc__claim-input" type="text" placeholder="Nro reclamo"
-            value={claim} onChange={e => handleClaimChange(e.target.value)} />
+            value={claim} disabled={isReadonly} onChange={e => handleClaimChange(e.target.value)} />
         </td>
         <td className="inc__td-mono" onClick={e => e.stopPropagation()}>
           <input className="inc__claim-input" type="text" placeholder="Motivo / notas"
-            value={notes} onChange={e => handleNotesChange(e.target.value)} style={{ minWidth: 90, maxWidth: 160 }} />
+            value={notes} disabled={isReadonly} onChange={e => handleNotesChange(e.target.value)} style={{ minWidth: 90, maxWidth: 160 }} />
         </td>
         <td className="inc__td-mono" onClick={e => e.stopPropagation()}>
           <button
             title={inc.countsSLA ? 'Cuenta para SLA' : 'No cuenta para SLA'}
-            onClick={() => onToggleSLA(inc._id, !inc.countsSLA)}
+            disabled={isReadonly} onClick={() => onToggleSLA(inc._id, !inc.countsSLA)}
             style={{
               fontSize: '0.7rem', padding: '0.15rem 0.4rem', borderRadius: 4,
               border: `1px solid ${inc.countsSLA ? '#10b98166' : '#64748b44'}`,
@@ -296,7 +296,7 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
         </td>
         <td className="inc__td-mono" onClick={e => e.stopPropagation()}>
           <button className="btn btn__secondary btn__outline" style={{ padding: '0.25rem 0.6rem' }}
-            onClick={handleSave} disabled={!dirty} title="Guardar">
+            onClick={handleSave} disabled={!dirty || isReadonly} title="Guardar">
             {saving ? '…' : '✔'}
           </button>
         </td>
@@ -319,7 +319,7 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
   )
 }
 
-export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncident, orgs, showOrg }) {
+export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncident, orgs, showOrg, isReadonly = false }) {
   const { theme } = useTheme()
   const [selected, setSelected] = useState([])
   const [bulkClaim, setBulkClaim] = useState('')
@@ -533,7 +533,7 @@ export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onN
           </div>
         )
       })()}
-      {selected.length > 0 && (
+      {!isReadonly && selected.length > 0 && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap',
           background: 'rgba(0,212,255,0.07)', border: '1px solid rgba(0,212,255,0.25)',
@@ -571,7 +571,7 @@ export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onN
               <th style={{ width: 32 }}>
                 <input type="checkbox"
                   checked={selected.length === filteredRows.length && filteredRows.length > 0}
-                  onChange={toggleAll} style={{ cursor: 'pointer', accentColor: COLOR_ACCENT }} />
+                  onChange={toggleAll} disabled={isReadonly} style={{ cursor: 'pointer', accentColor: COLOR_ACCENT }} />
               </th>
               <th>S</th>
               <th>Severity</th>
@@ -606,6 +606,7 @@ export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onN
                   cascadeCount={cascadeCountByParent[r._id] || 0}
                   isCascadeExpanded={expandedCritical.has(r._id)}
                   onToggleCascade={() => toggleCriticalCascade(r._id)}
+                  isReadonly={isReadonly}
                 />
               ))
             }

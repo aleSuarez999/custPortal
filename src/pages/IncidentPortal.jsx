@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+﻿import { useEffect, useState, useCallback } from 'react'
 import { useTheme } from '../hooks/useTheme'
 import {
   getIncidentReport,
@@ -48,6 +48,7 @@ export default function IncidentManagement() {
     } catch { return '' }
   })()
   const isAdmin = userRole === 'admin'
+  const isReadonly = userRole === 'readonly'
 
   const [orgs, setOrgs]               = useState([])
   const [selectedOrg, setSelectedOrg] = useState('')
@@ -425,6 +426,7 @@ export default function IncidentManagement() {
                 onNewIncident={handleNewIncident}
                 orgs={orgs}
                 showOrg={selectedOrg === 'ALL'}
+                isReadonly={isReadonly}
               />
             </div>
           )}
@@ -439,6 +441,7 @@ export default function IncidentManagement() {
                 onNewIncident={handleNewIncident}
                 orgs={orgs}
                 showOrg={selectedOrg === 'ALL'}
+                isReadonly={isReadonly}
               />
             </div>
           )}
