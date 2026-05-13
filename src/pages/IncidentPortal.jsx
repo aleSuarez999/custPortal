@@ -453,7 +453,8 @@ export default function IncidentManagement() {
                   onDelete={handleDeleteIncident}
                   onToggleSLA={handleToggleSLAResolved}
                   onSave={handleSaveResolved}
-                  onReopen={handleReopenIncident} />
+                  onReopen={handleReopenIncident}
+                  isAdmin={isAdmin} />
           )}
 
           {activeTab === 'recurrence' && (

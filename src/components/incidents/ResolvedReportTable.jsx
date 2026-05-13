@@ -7,7 +7,7 @@ import {
 } from './incidentConstants'
 import Text from '../Text'
 
-function ResolvedRow({ r, onDelete, onToggleSLA, onSave, onReopen }) {
+function ResolvedRow({ r, onDelete, onToggleSLA, onSave, onReopen, isAdmin }) {
   const [notes, setNotes]           = useState(r.resolutionNotes || '')
   const [detectedAt, setDetectedAt] = useState(r.detectedAt || null)
   const [resolvedAt, setResolvedAt] = useState(r.resolvedAt || null)
@@ -72,19 +72,22 @@ function ResolvedRow({ r, onDelete, onToggleSLA, onSave, onReopen }) {
         }
       </td>
       <td style={{ textAlign: 'center' }}>
-        <button
-          title={r.countsSLA ? 'Cuenta SLA — click para desactivar' : 'No cuenta SLA — click para activar'}
-          onClick={() => onToggleSLA?.(r._id, !r.countsSLA)}
-          style={{
-            fontSize: '0.7rem', fontWeight: 700, padding: '0.15rem 0.45rem', borderRadius: 4,
-            cursor: 'pointer', border: '1px solid', transition: 'all 0.15s',
-            background:   r.countsSLA ? 'rgba(239,68,68,0.15)' : 'rgba(100,116,139,0.1)',
-            color:        r.countsSLA ? '#ef4444' : '#475569',
-            borderColor:  r.countsSLA ? '#ef444444' : '#47556933',
-          }}
-        >
-          {r.countsSLA ? 'SLA' : '—'}
-        </button>
+        {isAdmin
+          ? <button
+              title={r.countsSLA ? 'Cuenta SLA — click para desactivar' : 'No cuenta SLA — click para activar'}
+              onClick={() => onToggleSLA?.(r._id, !r.countsSLA)}
+              style={{
+                fontSize: '0.7rem', fontWeight: 700, padding: '0.15rem 0.45rem', borderRadius: 4,
+                cursor: 'pointer', border: '1px solid', transition: 'all 0.15s',
+                background:   r.countsSLA ? 'rgba(239,68,68,0.15)' : 'rgba(100,116,139,0.1)',
+                color:        r.countsSLA ? '#ef4444' : '#475569',
+                borderColor:  r.countsSLA ? '#ef444444' : '#47556933',
+              }}
+            >
+              {r.countsSLA ? 'SLA' : '—'}
+            </button>
+          : null
+        }
       </td>
       <td style={{ textAlign: 'center' }}>
         {(() => {
@@ -142,7 +145,7 @@ function ResolvedRow({ r, onDelete, onToggleSLA, onSave, onReopen }) {
   )
 }
 
-export function ResolvedReportTable({ data, onDelete, onToggleSLA, onSave, onReopen }) {
+export function ResolvedReportTable({ data, onDelete, onToggleSLA, onSave, onReopen, isAdmin }) {
   const [filterManual, setFilterManual] = useState(false)
   if (!data) return null
   const { incidents } = data
@@ -206,7 +209,7 @@ export function ResolvedReportTable({ data, onDelete, onToggleSLA, onSave, onReo
               <tbody>
                 {displayed.map((r, i) => (
                   <ResolvedRow key={r._id || i} r={r}
-                    onDelete={onDelete} onToggleSLA={onToggleSLA} onSave={onSave} onReopen={onReopen} />
+                    onDelete={onDelete} onToggleSLA={onToggleSLA} onSave={onSave} onReopen={onReopen} isAdmin={isAdmin} />
                 ))}
               </tbody>
             </table>
