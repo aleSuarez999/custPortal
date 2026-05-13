@@ -427,6 +427,7 @@ export default function IncidentManagement() {
                 orgs={orgs}
                 showOrg={selectedOrg === 'ALL'}
                 isReadonly={isReadonly}
+                isAdmin={isAdmin}
               />
             </div>
           )}
@@ -442,6 +443,7 @@ export default function IncidentManagement() {
                 orgs={orgs}
                 showOrg={selectedOrg === 'ALL'}
                 isReadonly={isReadonly}
+                isAdmin={isAdmin}
               />
             </div>
           )}

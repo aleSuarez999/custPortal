@@ -51,7 +51,7 @@ function buildHierarchy(rows) {
   return result
 }
 
-function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, onToggleSelect, orgName, depth, isReadonly = false }) {
+function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, onToggleSelect, orgName, depth, isReadonly = false, isAdmin = false }) {
   const [expanded, setExpanded] = useState(false)
   const [detail, setDetail] = useState(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
@@ -231,19 +231,22 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
             value={notes} disabled={isReadonly} onChange={e => handleNotesChange(e.target.value)} style={{ minWidth: 90, maxWidth: 160 }} />
         </td>
         <td className="inc__td-mono" onClick={e => e.stopPropagation()}>
-          <button
-            title={inc.countsSLA ? 'Cuenta para SLA' : 'No cuenta para SLA'}
-            disabled={isReadonly} onClick={() => onToggleSLA(inc._id, !inc.countsSLA)}
-            style={{
-              fontSize: '0.7rem', padding: '0.15rem 0.4rem', borderRadius: 4,
-              border: `1px solid ${inc.countsSLA ? '#10b98166' : '#64748b44'}`,
-              background: inc.countsSLA ? 'rgba(16,185,129,0.12)' : 'rgba(100,116,139,0.08)',
-              color: inc.countsSLA ? '#10b981' : '#64748b',
-              cursor: 'pointer', fontWeight: 600,
-            }}
-          >
-            SLA
-          </button>
+          {isAdmin
+            ? <button
+                title={inc.countsSLA ? 'Cuenta para SLA' : 'No cuenta para SLA'}
+                onClick={() => onToggleSLA(inc._id, !inc.countsSLA)}
+                style={{
+                  fontSize: '0.7rem', padding: '0.15rem 0.4rem', borderRadius: 4,
+                  border: `1px solid ${inc.countsSLA ? '#10b98166' : '#64748b44'}`,
+                  background: inc.countsSLA ? 'rgba(16,185,129,0.12)' : 'rgba(100,116,139,0.08)',
+                  color: inc.countsSLA ? '#10b981' : '#64748b',
+                  cursor: 'pointer', fontWeight: 600,
+                }}
+              >
+                SLA
+              </button>
+            : null
+          }
         </td>
         <td className="inc__td-mono" onClick={e => e.stopPropagation()}>
           <button className="btn btn__secondary btn__outline" style={{ padding: '0.25rem 0.6rem' }}
@@ -270,7 +273,7 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
   )
 }
 
-export function InProcessIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncident, orgs, showOrg, isReadonly = false }) {
+export function InProcessIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncident, orgs, showOrg, isReadonly = false, isAdmin = false }) {
   const { theme } = useTheme()
   const [selected, setSelected] = useState([])
   const [bulkClaim, setBulkClaim] = useState('')
@@ -411,6 +414,7 @@ export function InProcessIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA
                   depth={depth}
                   onSave={onSave}
                   onToggleSLA={onToggleSLA}
+                  isAdmin={isAdmin}
                   onNewIncident={onNewIncident}
                   selected={selected.includes(r._id)}
                   onToggleSelect={toggleSelect}
