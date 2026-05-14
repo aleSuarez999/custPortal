@@ -83,7 +83,7 @@ function buildHierarchy(rows) {
   return result
 }
 
-function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, onToggleSelect, orgName, depth, cascadeCount = 0, isCascadeExpanded = false, onToggleCascade, isReadonly = false, isAdmin = false }) {
+function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, onToggleSelect, orgName, depth, cascadeCount = 0, isCascadeExpanded = false, onToggleCascade, isReadonly = false, isAdmin = false, slaColumnActive = false }) {
   const [expanded, setExpanded] = useState(false)
   const [detail, setDetail] = useState(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
@@ -280,22 +280,19 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
             value={notes} disabled={isReadonly} onChange={e => handleNotesChange(e.target.value)} style={{ minWidth: 90, maxWidth: 160 }} />
         </td>
         <td className="inc__td-mono" onClick={e => e.stopPropagation()}>
-          {isAdmin
-            ? <button
-                title={inc.countsSLA ? 'Cuenta para SLA' : 'No cuenta para SLA'}
-                onClick={() => onToggleSLA(inc._id, !inc.countsSLA)}
-                style={{
-                  fontSize: '0.7rem', padding: '0.15rem 0.4rem', borderRadius: 4,
-                  border: `1px solid ${inc.countsSLA ? '#10b98166' : '#64748b44'}`,
-                  background: inc.countsSLA ? 'rgba(16,185,129,0.12)' : 'rgba(100,116,139,0.08)',
-                  color: inc.countsSLA ? '#10b981' : '#64748b',
-                  cursor: 'pointer', fontWeight: 600,
-                }}
-              >
-                SLA
-              </button>
-            : null
-          }
+          <span
+            title={inc.countsSLA ? 'Cuenta para SLA' : 'No cuenta para SLA'}
+            onClick={() => slaColumnActive && !isReadonly && onToggleSLA(inc._id, !inc.countsSLA)}
+            style={{
+              fontSize: '0.65rem', fontWeight: 700, fontFamily: 'monospace',
+              color:      inc.countsSLA ? '#10b981' : '#64748b',
+              background: inc.countsSLA ? 'rgba(16,185,129,0.08)' : 'rgba(100,116,139,0.06)',
+              border:     `1px solid ${inc.countsSLA ? 'rgba(16,185,129,0.25)' : 'rgba(100,116,139,0.2)'}`,
+              borderRadius: 3, padding: '0.05rem 0.35rem',
+              cursor: slaColumnActive && !isReadonly ? 'pointer' : 'default',
+              userSelect: 'none',
+            }}
+          >SLA</span>
         </td>
         <td className="inc__td-mono" onClick={e => e.stopPropagation()}>
           <button className="btn btn__secondary btn__outline" style={{ padding: '0.25rem 0.6rem' }}
@@ -325,6 +322,7 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
 export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncident, orgs, showOrg, isReadonly = false, isAdmin = false }) {
   const { theme } = useTheme()
   const [selected, setSelected] = useState([])
+  const [slaColumnActive, setSlaColumnActive] = useState(false)
   const [bulkClaim, setBulkClaim] = useState('')
   const [bulkStatus, setBulkStatus] = useState('in_progress')
   const [bulkNotes, setBulkNotes] = useState('')
@@ -586,7 +584,7 @@ export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onN
               <th>Status</th>
               <th>Claim #</th>
               <th>Notes</th>
-              <th>SLA</th>
+              <th onClick={() => !isReadonly && setSlaColumnActive(v => !v)} style={{ cursor: slaColumnActive && !isReadonly ? 'pointer' : 'default', userSelect: 'none', color: slaColumnActive ? '#10b981' : 'inherit', borderBottom: slaColumnActive ? '2px solid #10b981' : '' }} title={slaColumnActive ? 'Click para desactivar columna SLA' : 'Click para activar columna SLA'}>SLA</th>
               <th></th>
             </tr>
           </thead>
@@ -603,6 +601,7 @@ export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onN
                   onSave={onSave}
                   onToggleSLA={onToggleSLA}
                   isAdmin={isAdmin}
+                  slaColumnActive={slaColumnActive}
                   onNewIncident={onNewIncident}
                   selected={selected.includes(r._id)}
                   onToggleSelect={toggleSelect}
