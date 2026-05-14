@@ -1,10 +1,10 @@
-
+﻿
 @use "sass:color";
 
 $grid-columns: 12;
 $cardWidth: 210px;
 
-// ── Paleta Tech/Dark ────────────────────────────────────────────────────────
+// â”€â”€ Paleta Tech/Dark â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 $color-bg-deep:       #080d14;
 $color-bg-surface:    #0d1520;
 $color-bg-card:       #111d2e;
@@ -62,7 +62,7 @@ $btn-input-border-width: 1px;
 $btn-input-border-style: solid;
 
 $font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-$font-ui:   'Inter', 'Segoe UI', system-ui, sans-serif;
+$font-ui:   'Roboto', 'Segoe UI', system-ui, sans-serif;
 
 $grid-breakpoints: (
   xs: 0, sm: 576px, md: 768px, lg: 992px,

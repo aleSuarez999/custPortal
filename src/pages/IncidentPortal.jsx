@@ -10,6 +10,8 @@ import {
   deleteIncident,
   reopenIncident,
   getRecurrenceReport,
+  getOrganizationDevicesStatusesOverview,
+  getNetworksByOrg,
 } from '../utils/api'
 import Text from '../components/Text'
 import { OpenIncidentsTable }    from '../components/incidents/OpenIncidentsTable'
@@ -41,6 +43,24 @@ function OrgSelector({ orgs, value, onChange }) {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
+
+  useEffect(() => {
+    if (orgs.length === 0) return
+    Promise.all(orgs.map(o => Promise.all([
+      getOrganizationDevicesStatusesOverview(o.id),
+      getNetworksByOrg(o.id),
+    ]))).then(results => {
+      let totalDevices = 0, totalNetworks = 0
+      for (const [devData, nets] of results) {
+        if (devData?.counts?.byStatus) {
+          const { online = 0, alerting = 0, dormant = 0, offline = 0 } = devData.counts.byStatus
+          totalDevices += online + alerting + dormant + offline
+        }
+        if (Array.isArray(nets)) totalNetworks += nets.length
+      }
+      setOrgSummary({ networks: totalNetworks, devices: totalDevices, loaded: true })
+    })
+  }, [orgs])
 
   return (
     <div className="inc__org-selector" ref={ref}>
@@ -85,6 +105,7 @@ export default function IncidentManagement() {
   })()
   const isAdmin = userRole === 'admin'
   const isReadonly = userRole === 'readonly'
+  const [orgSummary, setOrgSummary] = useState({ networks: 0, devices: 0, loaded: false })
 
   const [orgs, setOrgs]               = useState([])
   const [selectedOrg, setSelectedOrg] = useState('')
@@ -328,6 +349,24 @@ export default function IncidentManagement() {
           )}
         </div>
         <div className="inc__controls">
+          {orgSummary.loaded && (
+            <div style={{ display: "flex", gap: "0.4rem", alignItems: "center", flexShrink: 0, flexWrap: "wrap" }}>
+              {[
+                [orgs.length,           "orgs",        "#00d4ff"],
+                [orgSummary.networks,    "redes",       "#a78bfa"],
+                [orgSummary.devices,     "dispositivos","#10b981"],
+              ].map(([val, lbl, color]) => (
+                <span key={lbl} style={{
+                  fontSize: "0.68rem", fontFamily: "monospace", fontWeight: 600,
+                  color, background: color + "15",
+                  border: `1px solid ${color}40`,
+                  borderRadius: 4, padding: "0.12rem 0.5rem", whiteSpace: "nowrap",
+                }}>
+                  {val} <span style={{ fontWeight: 400, opacity: 0.75 }}>{lbl}</span>
+                </span>
+              ))}
+            </div>
+          )}
           <div className="inc__period-selector">
             <span className="inc__period-label">Period:</span>
             {PERIOD_OPTIONS.map(d => (
