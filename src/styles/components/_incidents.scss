@@ -1,7 +1,7 @@
-@use "../abstracts/variables" as *;
+﻿@use "../abstracts/variables" as *;
 @use "sass:color";
 
-// ── Dashboard wrapper ─────────────────────────────────────────────────────────
+// â”€â”€ Dashboard wrapper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .inc__dashboard {
   padding: 1.5rem 1.25rem;
   color: $color-text;
@@ -10,7 +10,7 @@
   margin: 0 auto;
 }
 
-// ── Header ────────────────────────────────────────────────────────────────────
+// â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .inc__header {
   display: flex;
   justify-content: space-between;
@@ -40,7 +40,7 @@
   margin: 0;
 }
 
-// ── Controls (org + period agrupados) ─────────────────────────────────────────
+// â”€â”€ Controls (org + period agrupados) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .inc__controls {
   display: flex;
   flex-direction: column;
@@ -52,8 +52,9 @@
   }
 }
 
-// ── Org selector ──────────────────────────────────────────────────────────────
+// â”€â”€ Org selector â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .inc__org-selector {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -82,7 +83,91 @@
   }
 }
 
-// ── Period selector ───────────────────────────────────────────────────────────
+.inc__org-combobox {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 200px;
+  padding: 0.3rem 0.6rem 0.3rem 0.8rem;
+  background: $color-bg-elevated;
+  border: 1px solid $color-border-accent;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  font-family: $font-mono;
+  font-size: 0.78rem;
+  color: $color-accent;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  user-select: none;
+
+  &:hover { box-shadow: $shadow-glow-accent; }
+}
+
+.inc__org-value {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inc__org-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  color: $color-accent;
+  font-family: $font-mono;
+  font-size: 0.78rem;
+  min-width: 0;
+
+  &::placeholder { color: $color-text-muted; opacity: 0.7; }
+}
+
+.inc__org-arrow {
+  font-size: 0.65rem;
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+.inc__org-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 200;
+  min-width: 100%;
+  max-width: 360px;
+  max-height: 260px;
+  overflow-y: auto;
+  background: $color-bg-surface;
+  border: 1px solid $color-border-accent;
+  border-radius: $radius-sm;
+  box-shadow: $shadow-elevated;
+}
+
+.inc__org-option {
+  padding: 0.4rem 0.85rem;
+  font-family: $font-mono;
+  font-size: 0.78rem;
+  color: $color-text;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s ease;
+
+  &:hover { background: $color-bg-elevated; color: $color-accent; }
+
+  &--active {
+    color: $color-accent;
+    background: $color-accent-dim;
+  }
+}
+
+.inc__org-dropdown-empty {
+  padding: 0.6rem 0.85rem;
+  font-size: 0.78rem;
+  color: $color-text-muted;
+  font-style: italic;
+}
+
+// â”€â”€ Period selector â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .inc__period-selector {
   display: flex;
   align-items: center;
@@ -122,7 +207,7 @@
   }
 }
 
-// ── Loading / Error ───────────────────────────────────────────────────────────
+// â”€â”€ Loading / Error â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .inc__loading {
   display: flex;
   align-items: center;
@@ -160,7 +245,7 @@
   padding: 1.5rem 0;
 }
 
-// ── KPI row ───────────────────────────────────────────────────────────────────
+// â”€â”€ KPI row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .inc__kpi-row {
   display: flex;
   flex-wrap: wrap;
@@ -219,7 +304,7 @@
   color: $color-text-muted;
 }
 
-// ── Availability badge ────────────────────────────────────────────────────────
+// â”€â”€ Availability badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .inc__avail-badge {
   background: $color-bg-card;
   border: 2px solid;
@@ -254,7 +339,7 @@
   font-weight: 600;
 }
 
-// ── Charts rows ───────────────────────────────────────────────────────────────
+// â”€â”€ Charts rows â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .inc__charts-row {
   display: flex;
   flex-wrap: wrap;
@@ -279,7 +364,7 @@
   &--wide { flex: 2 1 420px; }
 }
 
-// ── Tabs ──────────────────────────────────────────────────────────────────────
+// â”€â”€ Tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .inc__tabs {
   display: flex;
   gap: 0;
@@ -313,7 +398,7 @@
   }
 }
 
-// ── Panel genérico ────────────────────────────────────────────────────────────
+// â”€â”€ Panel genÃ©rico â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .inc__panel {
   background: $color-bg-card;
   border: 1px solid $color-border-subtle;
@@ -344,7 +429,7 @@
   line-height: 1.5;
 }
 
-// ── Tabla ─────────────────────────────────────────────────────────────────────
+// â”€â”€ Tabla â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .inc__table-wrap {
   overflow-x: auto;
 }
@@ -384,7 +469,7 @@
   color: $color-text-muted;
 }
 
-// ── Work Status select ────────────────────────────────────────────────────────
+// â”€â”€ Work Status select â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .inc__ws-select {
   font-family: $font-mono;
   font-size: 0.72rem;
@@ -407,7 +492,7 @@
   }
 }
 
-// ── Claim number input ────────────────────────────────────────────────────────
+// â”€â”€ Claim number input â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .inc__claim-input {
   background: $color-bg-elevated;
   border: 1px solid $color-border-subtle;
@@ -427,7 +512,7 @@
   }
 }
 
-// ── Save button ───────────────────────────────────────────────────────────────
+// â”€â”€ Save button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .inc__save-btn {
   background: $color-bg-elevated;
   border: 1px solid $color-border-subtle;
@@ -457,7 +542,7 @@
   }
 }
 
-// ── Badges ────────────────────────────────────────────────────────────────────
+// â”€â”€ Badges â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .inc__badge {
   display: inline-block;
   font-family: $font-mono;
@@ -483,7 +568,7 @@
   }
 }
 
-// ── Tooltip recharts ──────────────────────────────────────────────────────────
+// â”€â”€ Tooltip recharts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .inc__tooltip {
   background: $color-bg-elevated;
   border: 1px solid $color-border-accent;
@@ -502,7 +587,7 @@
   margin-bottom: 0.25rem !important;
 }
 
-// ── Footer note ───────────────────────────────────────────────────────────────
+// â”€â”€ Footer note â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .inc__footer-note {
   font-size: 0.66rem;
   color: $color-text-muted;
@@ -513,7 +598,7 @@
   border-top: 1px solid $color-border-subtle;
 }
 
-// ── Dropdown Reports navbar ───────────────────────────────────────────────────
+// â”€â”€ Dropdown Reports navbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .navbar__dropdown {
   position: relative;
   display: inline-flex;
@@ -596,7 +681,7 @@
   }
 }
 
-// ── History tab: controles y mini-KPIs ───────────────────────────────────────
+// â”€â”€ History tab: controles y mini-KPIs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .inc__hist-controls {
   display: flex;
   justify-content: space-between;
@@ -636,7 +721,7 @@
   &--resolved strong { color: $color-success; }
 }
 
-// ── Edit button (History tab) ─────────────────────────────────────────────────
+// â”€â”€ Edit button (History tab) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .inc__edit-btn {
   background: $color-bg-elevated;
   border: 1px solid $color-border-subtle;
@@ -658,12 +743,12 @@
   }
 }
 
-// ── Claim input wide (motivo resolución) ──────────────────────────────────────
+// â”€â”€ Claim input wide (motivo resoluciÃ³n) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .inc__claim-input--wide {
   width: 170px;
 }
 
-// ── History tab: controles y mini-KPIs ───────────────────────────────────────
+// â”€â”€ History tab: controles y mini-KPIs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .inc__hist-controls {
   display: flex;
   justify-content: space-between;
@@ -704,7 +789,7 @@
   &--resolved strong { color: $color-success; }
 }
 
-// ── Reincidencias: filas expandibles ─────────────────────────────────────────
+// â”€â”€ Reincidencias: filas expandibles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .inc__recurrence-row {
   transition: background 0.15s ease;
 
@@ -747,7 +832,7 @@
   tr:last-child td { border-bottom: none; }
 }
 
-// ── VPN Dashboard ─────────────────────────────────────────────────────────────
+// â”€â”€ VPN Dashboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .vpn__network-card {
   border: 1px solid $color-border-subtle;
   border-radius: $radius-md;
@@ -798,7 +883,7 @@
   margin: 0.4rem 0 0.2rem 0;
 }
 
-// ── Customer Portal ───────────────────────────────────────────────────────────
+// â”€â”€ Customer Portal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 // Grid de cards globales (vista todas las orgs)
 .portal__org-grid {
@@ -933,7 +1018,7 @@
   &:hover { color: $color-text-muted; background: none; }
 }
 
-// ── Status Map table ──────────────────────────────────────────────────────────
+// â”€â”€ Status Map table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .portal__status-table {
   // Filas de datos: hover sutil, no agresivo
   tbody tr.portal__status-row {

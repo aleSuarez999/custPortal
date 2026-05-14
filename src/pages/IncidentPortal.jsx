@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useCallback } from 'react'
+﻿import { useEffect, useState, useCallback, useRef } from 'react'
 import { useTheme } from '../hooks/useTheme'
 import {
   getIncidentReport,
@@ -19,23 +19,59 @@ import { RecurrenceTable }       from '../components/incidents/RecurrenceTable'
 import { SlaReportTable }        from '../components/incidents/SlaReport'
 import { PERIOD_OPTIONS, LS_ORG_KEY } from '../components/incidents/incidentConstants'
 import { DowntimeReport }        from '../components/incidents/DowntimeReport'
+import { LicensesTable }        from '../components/incidents/LicensesTable'
 import { jwtDecode }             from 'jwt-decode'
 
 // ── Selector de organizacion ──────────────────────────────────────────────────
 function OrgSelector({ orgs, value, onChange }) {
+  const [search, setSearch] = useState('')
+  const [open, setOpen]     = useState(false)
+  const ref = useRef(null)
+
+  const allOrgs     = [{ id: 'ALL', name: 'Ver todas' }, ...orgs]
+  const currentName = allOrgs.find(o => o.id === value)?.name ?? ''
+  const filtered    = search.trim()
+    ? allOrgs.filter(o => o.name.toLowerCase().includes(search.toLowerCase()))
+    : allOrgs
+
+  useEffect(() => { if (!open) setSearch('') }, [open])
+
+  useEffect(() => {
+    const handler = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
   return (
-    <div className="inc__org-selector">
+    <div className="inc__org-selector" ref={ref}>
       <label className="inc__period-label">Organization:</label>
-      <select className="inc__org-select" value={value} onChange={e => onChange(e.target.value)}>
-        <option value="ALL">Ver todas</option>
-        {orgs.map(o => (
-          <option key={o.id} value={o.id}>{o.name}</option>
-        ))}
-      </select>
+      <div className="inc__org-combobox" onClick={() => setOpen(v => !v)}>
+        {open
+          ? <input autoFocus className="inc__org-search-input" value={search}
+              onChange={e => setSearch(e.target.value)}
+              onClick={e => e.stopPropagation()}
+              placeholder={currentName} />
+          : <span className="inc__org-value">{currentName}</span>
+        }
+        <span className="inc__org-arrow">{open ? '▴' : '▾'}</span>
+      </div>
+      {open && (
+        <div className="inc__org-dropdown">
+          {filtered.length === 0
+            ? <div className="inc__org-dropdown-empty">Sin resultados</div>
+            : filtered.map(o => (
+                <div key={o.id}
+                  className={`inc__org-option${o.id === value ? ' inc__org-option--active' : ''}`}
+                  onMouseDown={e => { e.preventDefault(); onChange(o.id); setOpen(false) }}>
+                  {o.name}
+                </div>
+              ))
+          }
+        </div>
+      )}
     </div>
   )
 }
-
 // ── Pagina principal ──────────────────────────────────────────────────────────
 export default function IncidentManagement() {
   const { theme, toggle } = useTheme()
@@ -71,6 +107,7 @@ export default function IncidentManagement() {
     { key: 'resolved',    label: 'Resolved' },
     { key: 'recurrence',  label: 'Reincidencias' },
     { key: 'downtime',    label: 'Downtime Mensual' },
+    { key: 'licenses',   label: 'Licencias' },
   ]
 
   const toggleTabVisibility = key => {
@@ -127,7 +164,9 @@ export default function IncidentManagement() {
     getIncidentOrgs().then(list => {
       if (!list || list.length === 0) return
       setOrgs(list)
-      setSelectedOrg('ALL')
+      const saved = localStorage.getItem(LS_ORG_KEY)
+      const validIds = ['ALL', ...list.map(o => o.id)]
+      setSelectedOrg(validIds.includes(saved) ? saved : 'ALL')
     })
   }, [])
 
@@ -284,14 +323,11 @@ export default function IncidentManagement() {
     <div className="inc__dashboard">
       <div className="inc__header">
         <div className="inc__header-left">
-          <Text as="p" className="inc__subtitle">
-            Service Availability &amp; Incident reporting — infrastructure, network and managed device level
-          </Text>
-        </div>
-        <div className="inc__controls">
           {orgs.length > 0 && (
             <OrgSelector orgs={orgs} value={selectedOrg} onChange={setSelectedOrg} />
           )}
+        </div>
+        <div className="inc__controls">
           <div className="inc__period-selector">
             <span className="inc__period-label">Period:</span>
             {PERIOD_OPTIONS.map(d => (
@@ -302,6 +338,7 @@ export default function IncidentManagement() {
               </button>
             ))}
           </div>
+          {/* Theme toggle button 
           <button
             onClick={toggle}
             title={theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
@@ -314,9 +351,12 @@ export default function IncidentManagement() {
               cursor: 'pointer', fontSize: '0.72rem', fontFamily: 'inherit',
               letterSpacing: '0.04em', transition: 'all 0.2s', alignSelf: 'flex-end',
             }}
+             
           >
+           
             {theme === 'dark' ? '☀ Light' : '◑ Dark'}
           </button>
+           */}
         </div>
       </div>
 
@@ -364,6 +404,12 @@ export default function IncidentManagement() {
               <button className={`inc__tab${activeTab === 'downtime' ? ' inc__tab--active' : ''}`}
                 onClick={() => setActiveTab('downtime')}>
                 Downtime Mensual
+              </button>
+            )}
+            {!hiddenTabs.includes('licenses') && (
+              <button className={`inc__tab${activeTab === 'licenses' ? ' inc__tab--active' : ''}`}
+                onClick={() => setActiveTab('licenses')}>
+                Licencias
               </button>
             )}
             {isAdmin && (
@@ -467,6 +513,10 @@ export default function IncidentManagement() {
 
           {activeTab === 'downtime' && (
             <DowntimeReport selectedOrg={selectedOrg} isAdmin={isAdmin} />
+          )}
+
+          {activeTab === 'licenses' && !hiddenTabs.includes('licenses') && (
+            <LicensesTable orgs={orgs} />
           )}
 
           {activeTab === 'sla' && isAdmin && (

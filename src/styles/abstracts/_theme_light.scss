@@ -1,7 +1,7 @@
-// ═══════════════════════════════════════════════════════════════════════════════
-// LIGHT TECH THEME — overrides activos cuando <html data-theme="light">
+﻿// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// LIGHT TECH THEME â€” overrides activos cuando <html data-theme="light">
 // Paleta: fondos frios blanco/gris-azul, acento azul electrico, tipografia oscura
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 $lt-bg-deep:       #eef2f7;
 $lt-bg-surface:    #f8fafc;
@@ -48,6 +48,25 @@ $lt-shadow-hover:  0 2px 8px rgba(29,111,218,0.12), 0 4px 20px rgba(0,0,0,0.08);
     option { background: $lt-bg-surface; color: $lt-text; }
     &:focus { box-shadow: 0 0 0 2px $lt-accent-glow; border-color: $lt-accent; }
   }
+
+  .inc__org-combobox {
+    background: $lt-bg-card;
+    border-color: $lt-border-accent;
+    color: $lt-accent;
+    &:hover { box-shadow: 0 0 0 2px $lt-accent-glow; }
+  }
+
+  .inc__org-search-input { color: $lt-accent; &::placeholder { color: $lt-text-muted; } }
+
+  .inc__org-dropdown { background: $lt-bg-surface; border-color: $lt-border-accent; }
+
+  .inc__org-option {
+    color: $lt-text;
+    &:hover { background: $lt-bg-card; color: $lt-accent; }
+    &--active { color: $lt-accent; }
+  }
+
+  .inc__org-dropdown-empty { color: $lt-text-muted; }
 
   // -- Period selector -------------------------------------------------------
   .inc__period-label { color: $lt-text-muted; }

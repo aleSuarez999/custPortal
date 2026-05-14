@@ -692,3 +692,10 @@ export const getOrgBrandingLogo = async (orgId) => {
     return null
   }
 }
+
+export const getOrgLicensesOverview = async (orgId) => {
+  try {
+    const resp = await axiosInstance.get(`/organizations/${orgId}/licenses/overview`)
+    return resp.data?.ok ? resp.data.data : null
+  } catch (e) { return null }
+}
