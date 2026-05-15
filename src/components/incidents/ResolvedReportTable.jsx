@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { updateIncidentWorkStatus } from '../../utils/api'
 import { KpiCard } from './KpiCard'
 import {

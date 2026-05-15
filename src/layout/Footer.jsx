@@ -1,4 +1,4 @@
-﻿import React from 'react'
+import React from 'react'
 import Text from '../components/Text'
 
 const APP_VERSION = '1.2.0'
