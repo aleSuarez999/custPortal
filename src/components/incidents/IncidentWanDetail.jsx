@@ -27,7 +27,7 @@ function StatusDot({ status }) {
   )
 }
 
-const TYPE_ICON = { MX: '📟', MG: '📶', MS: '🔀', MR: '🛜', OTHER: '📦' }
+const TYPE_ICON = { MX: '', MG: '📶', MS: '🔀', MR: '🛜', OTHER: '📦' }
 
 // ── Sección WAN links del MX + dispositivos downstream offline ────────────────
 function WanLinksTable({ wanLinks, incidentInterface, networkDevices }) {
@@ -388,7 +388,7 @@ function DeviceCard({ dev, inc, networkDevices, orgId, networkId, onManualIncide
     }}>
       {/* ── Cabecera ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '1rem' }}>{TYPE_ICON[dev.type] || '📦'}</span>
+        <span style={{ fontSize: '1rem' }}>{TYPE_ICON[dev.type] || ''}</span>
 
         <span style={{ fontWeight: 700, fontSize: '0.8rem', color: isDown ? '#ef4444' : '#e2e8f0' }}>
           {dev.type}
@@ -399,7 +399,7 @@ function DeviceCard({ dev, inc, networkDevices, orgId, networkId, onManualIncide
             title={`Incidente abierto: ${openIncLabel}`}
             style={{ fontSize: '0.85rem', lineHeight: 1, cursor: 'default' }}
           >
-            🚨
+            
           </span>
         )}
 

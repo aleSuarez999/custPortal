@@ -1,6 +1,7 @@
-﻿import { useState } from 'react'
+﻿              import { useState, useEffect, useCallback } from 'react'
 import { useTheme } from '../../hooks/useTheme'
-import { getIncidentNetworkDetail } from '../../utils/api'
+import { ContactsPopup } from './ContactsPopup'
+import { getIncidentNetworkDetail, getContacts } from '../../utils/api'
 import IncidentWanDetail from './IncidentWanDetail'
 import {
   COLOR_ACCENT, COLOR_MUTED, COLOR_WARNING,
@@ -83,7 +84,7 @@ function buildHierarchy(rows) {
   return result
 }
 
-function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, onToggleSelect, orgName, depth, cascadeCount = 0, isCascadeExpanded = false, onToggleCascade, isReadonly = false, isAdmin = false, slaColumnActive = false }) {
+function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, onToggleSelect, orgName, depth, cascadeCount = 0, isCascadeExpanded = false, onToggleCascade, isReadonly = false, isAdmin = false, slaColumnActive = false, contactsMap = {}, onOpenContacts }) {
   const [expanded, setExpanded] = useState(false)
   const [detail, setDetail] = useState(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
@@ -294,6 +295,21 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
             }}
           >SLA</span>
         </td>
+        <td style={{ textAlign: 'center', verticalAlign: 'middle' }} onClick={e => e.stopPropagation()}>
+          {(() => {
+            const oc = contactsMap[inc.orgId]
+            const has = Array.isArray(oc) && oc.length > 0
+            return (
+              <button title={has ? `Ver contactos ()` : 'Agregar contacto'}
+                onClick={() => onOpenContacts({ orgId: inc.orgId })}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.1rem 0.25rem', position: 'relative', lineHeight: 1 }}
+              >
+                <span style={{ fontSize: '1rem', color: has ? '#00d4ff' : '#475569' }}>👤</span>
+                {!has && Array.isArray(oc) && <span style={{ position: 'absolute', top: 0, right: 0, fontSize: '0.55rem', color: '#64748b', fontWeight: 700 }}>+</span>}
+              </button>
+            )
+          })()}
+        </td>
         <td className="inc__td-mono" onClick={e => e.stopPropagation()}>
           <button className="btn btn__secondary btn__outline" style={{ padding: '0.25rem 0.6rem' }}
             onClick={handleSave} disabled={!dirty || isReadonly} title="Guardar">
@@ -322,6 +338,19 @@ function OpenIncidentRow({ inc, onSave, onToggleSLA, onNewIncident, selected, on
 export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onNewIncident, orgs, showOrg, isReadonly = false, isAdmin = false }) {
   const { theme } = useTheme()
   const [selected, setSelected] = useState([])
+  const [contactsPopup, setContactsPopup] = useState(null)
+  const [contactsMap, setContactsMap]       = useState({})
+  const refreshOrgContacts = useCallback(async (orgId) => {
+    const contacts = await getContacts(orgId)
+    setContactsMap(prev => ({ ...prev, [orgId]: contacts }))
+  }, [])
+
+  useEffect(() => {
+    const ids = [...new Set(rows.map(r => r.orgId).filter(Boolean))]
+    if (ids.length === 0) return
+    Promise.all(ids.map(id => getContacts(id).then(c => [id, c])))
+      .then(entries => setContactsMap(Object.fromEntries(entries)))
+  }, [rows])
   const [slaColumnActive, setSlaColumnActive] = useState(false)
   const [bulkClaim, setBulkClaim] = useState('')
   const [bulkStatus, setBulkStatus] = useState('in_progress')
@@ -585,6 +614,7 @@ export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onN
               <th>Claim #</th>
               <th>Notes</th>
               <th onClick={() => !isReadonly && setSlaColumnActive(v => !v)} style={{ cursor: slaColumnActive && !isReadonly ? 'pointer' : 'default', userSelect: 'none', color: slaColumnActive ? '#10b981' : 'inherit', borderBottom: slaColumnActive ? '2px solid #10b981' : '' }} title={slaColumnActive ? 'Click para desactivar columna SLA' : 'Click para activar columna SLA'}>SLA</th>
+              <th style={{ textAlign: 'center', width: '2rem' }}>👤</th>
               <th></th>
             </tr>
           </thead>
@@ -602,6 +632,8 @@ export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onN
                   onToggleSLA={onToggleSLA}
                   isAdmin={isAdmin}
                   slaColumnActive={slaColumnActive}
+                  contactsMap={contactsMap}
+                  onOpenContacts={({ orgId }) => setContactsPopup({ orgId, orgName: orgs.find(o => o.id === orgId)?.name || orgId })}
                   onNewIncident={onNewIncident}
                   selected={selected.includes(r._id)}
                   onToggleSelect={toggleSelect}
@@ -616,6 +648,14 @@ export function OpenIncidentsTable({ rows, onSave, onBulkClaim, onToggleSLA, onN
           </tbody>
         </table>
       </div>
+      {contactsPopup && (
+        <ContactsPopup
+          orgId={contactsPopup.orgId}
+          orgName={contactsPopup.orgName}
+          isReadonly={isReadonly}
+          onClose={() => { if (contactsPopup) refreshOrgContacts(contactsPopup.orgId); setContactsPopup(null) }}
+        />
+      )}
     </>
   )
 }

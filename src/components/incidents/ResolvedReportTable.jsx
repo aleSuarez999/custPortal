@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { updateIncidentWorkStatus } from '../../utils/api'
 import { KpiCard } from './KpiCard'
 import {
@@ -7,7 +7,7 @@ import {
 } from './incidentConstants'
 import Text from '../Text'
 
-function ResolvedRow({ r, onDelete, onToggleSLA, onSave, onReopen, isAdmin }) {
+function ResolvedRow({ r, onDelete, onToggleSLA, onSave, onReopen, isAdmin, isReadonly = false }) {
   const [notes, setNotes]           = useState(r.resolutionNotes || '')
   const [detectedAt, setDetectedAt] = useState(r.detectedAt || null)
   const [resolvedAt, setResolvedAt] = useState(r.resolvedAt || null)
@@ -72,22 +72,19 @@ function ResolvedRow({ r, onDelete, onToggleSLA, onSave, onReopen, isAdmin }) {
         }
       </td>
       <td style={{ textAlign: 'center' }}>
-        {isAdmin
-          ? <button
-              title={r.countsSLA ? 'Cuenta SLA — click para desactivar' : 'No cuenta SLA — click para activar'}
-              onClick={() => onToggleSLA?.(r._id, !r.countsSLA)}
-              style={{
-                fontSize: '0.7rem', fontWeight: 700, padding: '0.15rem 0.45rem', borderRadius: 4,
-                cursor: 'pointer', border: '1px solid', transition: 'all 0.15s',
-                background:   r.countsSLA ? 'rgba(239,68,68,0.15)' : 'rgba(100,116,139,0.1)',
-                color:        r.countsSLA ? '#ef4444' : '#475569',
-                borderColor:  r.countsSLA ? '#ef444444' : '#47556933',
-              }}
-            >
-              {r.countsSLA ? 'SLA' : '—'}
-            </button>
-          : null
-        }
+        <span
+          title={r.countsSLA ? 'Cuenta para SLA' : 'No cuenta para SLA'}
+          onClick={() => !isReadonly && onToggleSLA?.(r._id, !r.countsSLA)}
+          style={{
+            fontSize: '0.65rem', fontWeight: 700, fontFamily: 'monospace',
+            color:      r.countsSLA ? '#10b981' : '#64748b',
+            background: r.countsSLA ? 'rgba(16,185,129,0.08)' : 'rgba(100,116,139,0.06)',
+            border:     `1px solid ${r.countsSLA ? 'rgba(16,185,129,0.25)' : 'rgba(100,116,139,0.2)'}`,
+            borderRadius: 3, padding: '0.05rem 0.35rem',
+            cursor: !isReadonly ? 'pointer' : 'default',
+            userSelect: 'none',
+          }}
+        >SLA</span>
       </td>
       <td style={{ textAlign: 'center' }}>
         {(() => {
@@ -145,7 +142,7 @@ function ResolvedRow({ r, onDelete, onToggleSLA, onSave, onReopen, isAdmin }) {
   )
 }
 
-export function ResolvedReportTable({ data, onDelete, onToggleSLA, onSave, onReopen, isAdmin }) {
+export function ResolvedReportTable({ data, onDelete, onToggleSLA, onSave, onReopen, isAdmin, isReadonly = false }) {
   const [filterManual, setFilterManual] = useState(false)
   if (!data) return null
   const { incidents } = data
@@ -209,7 +206,7 @@ export function ResolvedReportTable({ data, onDelete, onToggleSLA, onSave, onReo
               <tbody>
                 {displayed.map((r, i) => (
                   <ResolvedRow key={r._id || i} r={r}
-                    onDelete={onDelete} onToggleSLA={onToggleSLA} onSave={onSave} onReopen={onReopen} isAdmin={isAdmin} />
+                    onDelete={onDelete} onToggleSLA={onToggleSLA} onSave={onSave} onReopen={onReopen} isAdmin={isAdmin} isReadonly={isReadonly} />
                 ))}
               </tbody>
             </table>

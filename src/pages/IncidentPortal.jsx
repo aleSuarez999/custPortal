@@ -10,8 +10,6 @@ import {
   deleteIncident,
   reopenIncident,
   getRecurrenceReport,
-  getOrganizationDevicesStatusesOverview,
-  getNetworksByOrg,
 } from '../utils/api'
 import Text from '../components/Text'
 import { OpenIncidentsTable }    from '../components/incidents/OpenIncidentsTable'
@@ -44,23 +42,6 @@ function OrgSelector({ orgs, value, onChange }) {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  useEffect(() => {
-    if (orgs.length === 0) return
-    Promise.all(orgs.map(o => Promise.all([
-      getOrganizationDevicesStatusesOverview(o.id),
-      getNetworksByOrg(o.id),
-    ]))).then(results => {
-      let totalDevices = 0, totalNetworks = 0
-      for (const [devData, nets] of results) {
-        if (devData?.counts?.byStatus) {
-          const { online = 0, alerting = 0, dormant = 0, offline = 0 } = devData.counts.byStatus
-          totalDevices += online + alerting + dormant + offline
-        }
-        if (Array.isArray(nets)) totalNetworks += nets.length
-      }
-      setOrgSummary({ networks: totalNetworks, devices: totalDevices, loaded: true })
-    })
-  }, [orgs])
 
   return (
     <div className="inc__org-selector" ref={ref}>
@@ -541,7 +522,8 @@ export default function IncidentManagement() {
                   onToggleSLA={handleToggleSLAResolved}
                   onSave={handleSaveResolved}
                   onReopen={handleReopenIncident}
-                  isAdmin={isAdmin} />
+                  isAdmin={isAdmin}
+                  isReadonly={isReadonly} />
           )}
 
           {activeTab === 'recurrence' && (

@@ -1,4 +1,4 @@
-import axios from "axios";
+﻿import axios from "axios";
 
 const isProduction = import.meta.env.VITE_PRODUCTION === 'true';
 const subFolder = import.meta.env.VITE_BASE;
@@ -19,7 +19,7 @@ axiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
-// Interceptor para manejar errores de autenticación
+// Interceptor para manejar errores de autenticaciÃ³n
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -239,7 +239,7 @@ export const getNetworkSsids = async (networkId) => {
 
 export const copyVlans = async (vlans, targetNetworkId) => {
     console.info("api copiar vlans")
-    // vlans sería el body
+    // vlans serÃ­a el body
     try {
         const resp = await axiosInstance.post(`/networks/${targetNetworkId}/vlans`, {vlans})
         console.info("resp post vlan: ", resp.data)
@@ -255,7 +255,7 @@ export const copyVlans = async (vlans, targetNetworkId) => {
 
 export const copySsids = async (ssids, targetNetworkId) => {
     console.info("api copiar vlans")
-    // vlans sería el body
+    // vlans serÃ­a el body
     try {
         const resp = await axiosInstance.post(`/networks/${targetNetworkId}/wireless/ssids`, {ssids})
         console.info("resp post ssids: ", resp.data)
@@ -301,7 +301,7 @@ export const getCUParque = async ({ serviceProvider, groupId } = {}) => {
 
 /**
  * GET /api/cu/altas/diarias
- * Altas por día.
+ * Altas por dÃ­a.
  * @param {Object} [filters] - { fechaDesde: "YYYY-MM-DD", fechaHasta: "YYYY-MM-DD", cliente }
  */
 export const getCUAltasDiarias = async (filters = {}) => {
@@ -361,7 +361,7 @@ export const getCUClientesAcumulados = async (filters = {}) => {
 /**
  * GET /api/cu/clientes/lista
  * Lista de clientes para autocomplete.
- * @param {string} q - Texto de búsqueda
+ * @param {string} q - Texto de bÃºsqueda
  */
 export const getCUClientesLista = async (q = "") => {
   try {
@@ -399,7 +399,7 @@ export const getCUSucursalesLista = async (q = "", empresa = "") => {
   } catch (err) { return []; }
 };
 
-// GET /api/incidents/orgs → lista orgs con filtro del dashboard
+// GET /api/incidents/orgs â†’ lista orgs con filtro del dashboard
 export const getIncidentOrgs = async () => {
     try {
         const resp = await axiosInstance.get('/incidents/orgs')
@@ -434,7 +434,7 @@ export const updateIncidentWorkStatus = async (id, { workStatus, claimNumber, re
     }
 }
 
-// POST /api/incidents/manual → crear incidente manual para MG/MS/MR
+// POST /api/incidents/manual â†’ crear incidente manual para MG/MS/MR
 export const createManualIncident = async (payload) => {
     try {
         const resp = await axiosInstance.post('/incidents/manual', payload)
@@ -446,7 +446,7 @@ export const createManualIncident = async (payload) => {
     }
 }
 
-// PATCH /api/incidents/:id/sla → toggle countsSLA
+// PATCH /api/incidents/:id/sla â†’ toggle countsSLA
 export const toggleIncidentSLA = async (id, countsSLA) => {
     try {
         const resp = await axiosInstance.patch(`/incidents/${id}/sla`, { countsSLA })
@@ -457,7 +457,7 @@ export const toggleIncidentSLA = async (id, countsSLA) => {
     }
 }
 
-// PATCH /api/incidents/bulk-claim → asignar mismo claim a varios incidentes
+// PATCH /api/incidents/bulk-claim â†’ asignar mismo claim a varios incidentes
 export const bulkAssignClaim = async (ids, claimNumber, workStatus, resolutionNotes = '') => {
     try {
         const resp = await axiosInstance.patch('/incidents/bulk-claim', { ids, claimNumber, workStatus, resolutionNotes })
@@ -507,7 +507,7 @@ export const getRecurrenceReport = async (orgId = null, days = 30) => {
     }
 }
 
-// ── VPN ───────────────────────────────────────────────────────────────────────
+// â”€â”€ VPN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getVpnOrgs = async () => {
   try {
@@ -546,7 +546,7 @@ export const getVpnRecurrence = async (orgId, days = 30) => {
   } catch (e) { console.error('getVpnRecurrence:', e.message); return null }
 }
 
-// ── VPN Events ────────────────────────────────────────────────────────────────
+// â”€â”€ VPN Events â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getVpnEventNetworks = async (orgId) => {
   try {
@@ -584,7 +584,7 @@ export const getVpnEventStats = async (orgId, days = 7) => {
   } catch (e) { return null }
 }
 
-// ── Customer Portal ───────────────────────────────────────────────────────────
+// â”€â”€ Customer Portal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getPortalOrgs = async () => {
   try {
@@ -698,4 +698,34 @@ export const getOrgLicensesOverview = async (orgId) => {
     const resp = await axiosInstance.get(`/organizations/${orgId}/licenses/overview`)
     return resp.data?.ok ? resp.data.data : null
   } catch (e) { return null }
+}
+
+
+// ── Contacts ──────────────────────────────────────────────────────────────────
+export const getContacts = async (orgId) => {
+  try {
+    const res = await axiosInstance.get('/contacts', { params: { orgId } })
+    return res.data.contacts || []
+  } catch { return [] }
+}
+
+export const createContact = async (data) => {
+  try {
+    const res = await axiosInstance.post('/contacts', data)
+    return res.data.contact || null
+  } catch { return null }
+}
+
+export const updateContact = async (id, data) => {
+  try {
+    const res = await axiosInstance.put(`/contacts/${id}`, data)
+    return res.data.contact || null
+  } catch { return null }
+}
+
+export const deleteContact = async (id) => {
+  try {
+    const res = await axiosInstance.delete(`/contacts/${id}`)
+    return res.data.ok || false
+  } catch { return false }
 }
